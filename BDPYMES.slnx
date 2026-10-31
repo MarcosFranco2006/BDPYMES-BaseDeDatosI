@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="BDPYMES.Api/BDPYMES.Api.csproj" />
+  <Project Path="BDPYMES.LogicaServicio/BDPYMES.LogicaServicio.csproj" />
+  <Project Path="BDPYMES.LogicaTest/BDPYMES.LogicaTest.csproj" />
+</Solution>
