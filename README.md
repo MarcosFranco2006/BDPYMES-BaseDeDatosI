@@ -1,40 +1,29 @@
 # BDPYMES
 
-Solución de Programación 1 (UCSE) generada con [UCSE CLI](https://github.com/BauDev0/UcseCLI).
+Backend y frontend hechos para comunicarse con la base de datos BDPYMES, para el proyecto final de Base de Datos I.
 
-## Estructura
+Alumnos: Fagiano Bautista, Franco Marcos, Nuñez Marko, Salusso Gabriel
 
-```text
-BDPYMES.Api/
-BDPYMES.LogicaServicio/
-BDPYMES.LogicaTest/
-```
+# Clonar el repositorio y entrar a la carpeta raíz
+En la terminal de VSCode escribir el siguiente comando 'git clone https://github.com/MarcosFranco2006/BDPYMES-BaseDeDatosI', apretar ENTER y acto seguido escribir 'cd BDPYMES-BaseDeDatosI' y apretar ENTER para acceder a la carpeta raíz del proyecto.
 
-| Proyecto | Capa | Unidad |
-|---|---|---|
-| `BDPYMES.Api` | Web API (controllers y DTOs) | 6 |
-| `BDPYMES.LogicaServicio` | Lógica de negocio y datos | 2, 5 |
-| `BDPYMES.LogicaTest` | Tests unitarios (NUnit) | 4 |
+# Correr Test unitario (Aún no implementados)
+-Desde la terminal:
 
-## Cómo ejecutar
+Abrir una terminal desde la carpeta raíz en donde se va a escribir el comando 'cd BDPYMES.Tests', apretar ENTER y luego escribir 'dotnet test' y apretar ENTER.
 
-```bash
-# restaurar dependencias y compilar
-dotnet build
+-Desde los archivos en VSCode:
 
-# correr los tests
-dotnet test
+Se debe ir a la siguiente ubicación 'BDPYMES.Tests/PymesServiceTests.cs' apretar CLICK DERECHO en 'PymesServiceTests.cs' y seleccionar la opción de run test.
 
-# levantar la Web API
-dotnet run --project BDPYMES.Api
-```
+# Levantar APIs
+-Desde la terminal:
 
-## Dónde va cada cosa
+En la terminal abierta desde la carpeta raíz poner: 'cd BDPYMES.Api' darle a ENTER, luego poner en la misma terminal 'dotnet run', darle a la combinación 'CTRL + CLICK' al puerto aclarado como 'http://localhost:5089/' y agregar 'swagger' al final de la URL para probar los endpoints.
 
-- **Entidades/**: clases del dominio (solo datos y comportamiento propio).
-- **Servicios/**: reglas de negocio. No escriben por consola ni leen input.
-- **Datos/**: lectura y escritura de los archivos JSON (Unidad 5).
-- **Tests**: un test por comportamiento, con nombres `Metodo_Escenario_ResultadoEsperado`.
+La URL final quedaría: http://localhost:5089/swagger/index.html
 
-> El código de ejemplo (`Producto`) está para tomarlo como referencia:
-> reemplazalo por el modelo que pide el enunciado.
+# Levantar Frontend
+Una vez levantada la API, se debe iniciar el Live Server en la ventana donde está la carpeta raíz (Abajo a la derecha de VSCode aparece un logo de una antena y un texto que dice 'Go Live', apretar ahí).
+
+Una vez iniciado el Live Server se puede acceder a la pantalla mediante esta URL: http://127.0.0.1:5500/Frontend/
