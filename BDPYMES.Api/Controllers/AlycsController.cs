@@ -21,20 +21,37 @@ public class AlycsController : ControllerBase
     [HttpGet]
     public IActionResult ObtenerTodos()
     {
-        IEnumerable<AlycResponse> respuesta = _servicio
-            .ConsultarDatosAlycs()
-            .Select(x => x.AAlycResponse());
+        try{
+            IEnumerable<AlycResponse> respuesta = _servicio
+                .ConsultarDatosAlycs()
+                .Select(x => x.AAlycResponse());
 
-        return Ok(respuesta);
+            return Ok(respuesta);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensaje = "Ocurrió un error inesperado", detalle = ex.Message });
+        }
     }
 
     [HttpPost]
     public IActionResult Crear([FromBody] AlycRequest request)
     {
+        try
+        {
         Alyc alyc = request.AAlyc();
 
         _servicio.InsertarDatoAlyc(alyc);
 
         return StatusCode(201, alyc.AAlycResponse());
+        }        
+        catch (ArgumentException ex)
+        {
+            return StatusCode(400, new { mensaje = "Dato mal brindado", detalle = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensaje = "Ocurrió un error inesperado", detalle = ex.Message });
+        }
     }
 }

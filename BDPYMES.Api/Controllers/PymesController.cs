@@ -21,20 +21,38 @@ public class PymesController : ControllerBase
     [HttpGet]
     public IActionResult ObtenerTodos()
     {
-        IEnumerable<PymeResponse> respuesta = _servicio
-            .ConsultarDatosPymes()
-            .Select(x => x.APymeResponse());
+        try
+        {
+            IEnumerable<PymeResponse> respuesta = _servicio
+                .ConsultarDatosPymes()
+                .Select(x => x.APymeResponse());
 
-        return Ok(respuesta);
+            return Ok(respuesta);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensaje = "Ocurrió un error inesperado", detalle = ex.Message });
+        }
     }
 
     [HttpPost]
     public IActionResult Crear([FromBody] PymeRequest request)
     {
-        Pyme pyme = request.APyme();
+        try
+        {
+            Pyme pyme = request.APyme();
 
-        _servicio.InsertarDatoPyme(pyme);
+            _servicio.InsertarDatoPyme(pyme);
 
-        return StatusCode(201, pyme.APymeResponse());
+            return StatusCode(201, pyme.APymeResponse());
+        }        
+        catch (ArgumentException ex)
+        {
+            return StatusCode(400, new { mensaje = "Dato mal brindado", detalle = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensaje = "Ocurrió un error inesperado", detalle = ex.Message });
+        }
     }
 }
