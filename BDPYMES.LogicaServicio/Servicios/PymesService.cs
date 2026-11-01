@@ -169,4 +169,79 @@ public class PymesService
         }
         return alycs;
     }
+
+        public Broker InsertarDatoBroker(Broker broker)
+    {
+        List<Broker> brokers = ConsultarDatosBrokers();
+
+        if (!string.IsNullOrEmpty(broker.Nombre) && broker.Nombre.Length > 50)
+            throw new ArgumentException("El nombre no puede superar los 50 caracteres.");
+
+        broker.Id = brokers.Count > 0 ? brokers.Max(x => x.Id) + 1 : 1;
+
+        string query = "INSERT INTO BROKERS (ID, Nombre) VALUES (@ID, @Nombre)";
+
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                // Usamos SqlParameter para tipar y acotar exactamente igual que en SQL Server
+                command.Parameters.Add("@ID", SqlDbType.VarChar, 13).Value = (object)broker.Id ?? DBNull.Value;
+                command.Parameters.Add("@Nombre", SqlDbType.VarChar, 50).Value = (object)broker.Nombre ?? DBNull.Value;
+                try
+                {
+                    connection.Open();
+                    int filasAfectadas = command.ExecuteNonQuery();
+                    Console.WriteLine($"¡Registro insertado con éxito! Filas afectadas: {filasAfectadas}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error al insertar: {ex.Message}");
+                    throw; 
+                }
+            }
+        }
+        return broker;
+    }
+
+    public List<Broker> ConsultarDatosBrokers()
+    {
+        List<Broker> brokers = new List<Broker>();
+        string query = "SELECT ID, Nombre FROM BROKERS";
+
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    connection.Open();
+                    
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        Console.WriteLine("\n--- Lista de Pymes ---"); // Corregido el texto de la consola
+                        while (reader.Read())
+                        {
+                            // Es buena práctica validar si la columna viene NULL de la base de datos
+                            int id = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                            string nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
+
+                            Broker nuevoBroker = new Broker 
+                            { 
+                                Id = id, 
+                                Nombre = nombre, 
+                            };
+                            
+                            brokers.Add(nuevoBroker);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error al consultar: {ex.Message}");
+                }
+            }
+        }
+        return brokers;
+    }
 }
