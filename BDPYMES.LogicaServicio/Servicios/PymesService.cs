@@ -533,4 +533,81 @@ public class PymesService
         }
         return tasasInteres;
     }
+
+    public BrokerComision InsertarDatoBrokerComision(BrokerComision brokerComision)
+    {
+        List<BrokerComision> brokerComisiones = ConsultarDatosBrokerComisiones();
+        List<Broker> brokers = ConsultarDatosBrokers();
+
+        bool existeBroker = brokers.Any(b => b.Id == brokerComision.IdBroker);
+        if (!existeBroker)
+            throw new ArgumentException($"No existe un broker cargado con el ID {brokerComision.IdBroker}.");
+
+        string query = "INSERT INTO [BROKERS/COMISIONES] (ID_BROKER, Ultima_Actualizacion, Porcentaje_Comision) VALUES (@ID_BROKER, @Ultima_Actualizacion, @Porcentaje_Comision)";
+
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.Add("@ID_BROKER", SqlDbType.Int).Value = (object)brokerComision.IdBroker;
+                command.Parameters.Add("@Ultima_Actualizacion", SqlDbType.DateTime).Value = DateTime.Now;
+                SqlParameter param = command.Parameters.Add("@Porcentaje_Comision", SqlDbType.Decimal);
+                param.Precision = 6;
+                param.Scale = 3;
+                param.Value = (object)brokerComision.PorcentajeComision;
+
+                try
+                {
+                    connection.Open();
+                    int filasAfectadas = command.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error al insertar: {ex.Message}");
+                }
+            }
+        }
+        return brokerComision;
+    }
+
+    public List<BrokerComision> ConsultarDatosBrokerComisiones()
+    {
+        List<BrokerComision> brokerComisiones = new List<BrokerComision>();
+        string query = "SELECT ID_BROKER, Ultima_Actualizacion, Porcentaje_Comision FROM [BROKERS/COMISIONES]";
+
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    connection.Open();
+                    
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            int idBroker = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                            DateTime ultimaActualizacion = reader.GetDateTime(1);
+                            decimal porcentajeComision = reader.IsDBNull(2) ? 0 : reader.GetDecimal(2);
+
+                            BrokerComision nuevoBrokerComision = new BrokerComision 
+                            { 
+                                IdBroker = idBroker,
+                                UltimaActualizacion = ultimaActualizacion, 
+                                PorcentajeComision = porcentajeComision, 
+                            };
+                            
+                            brokerComisiones.Add(nuevoBrokerComision);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error al consultar: {ex.Message}");
+                }
+            }
+        }
+        return brokerComisiones;
+    }
 }
