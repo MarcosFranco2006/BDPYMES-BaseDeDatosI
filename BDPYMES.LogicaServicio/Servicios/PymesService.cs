@@ -316,4 +316,74 @@ public class PymesService
         }
         return garantias;
     }
+
+    public Sgr InsertarDatoSgr(Sgr sgr)
+    {
+        List<Sgr> sgrs = ConsultarDatosSgrs();
+
+        if (!string.IsNullOrEmpty(sgr.Nombre) && sgr.Nombre.Length > 50)
+            throw new ArgumentException("El nombre no puede superar los 50 caracteres.");
+
+        sgr.Id = sgrs.Count > 0 ? sgrs.Max(x => x.Id) + 1 : 1;
+
+        string query = "INSERT INTO SGRs (ID, Nombre) VALUES (@ID, @Nombre)";
+
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.Add("@ID", SqlDbType.Int).Value = (object)sgr.Id;
+                command.Parameters.Add("@Nombre", SqlDbType.VarChar, 50).Value = (object)sgr.Nombre ?? DBNull.Value;
+                try
+                {
+                    connection.Open();
+                    int filasAfectadas = command.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error al insertar: {ex.Message}");
+                }
+            }
+        }
+        return sgr;
+    }
+
+    public List<Sgr> ConsultarDatosSgrs()
+    {
+        List<Sgr> sgrs = new List<Sgr>();
+        string query = "SELECT ID, Nombre FROM SGRs";
+
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    connection.Open();
+                    
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            int id = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                            string nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
+
+                            Sgr nuevoSgr = new Sgr 
+                            { 
+                                Id = id, 
+                                Nombre = nombre, 
+                            };
+                            
+                            sgrs.Add(nuevoSgr);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error al consultar: {ex.Message}");
+                }
+            }
+        }
+        return sgrs;
+    }
 }
