@@ -39,12 +39,10 @@ public class PymesService
                 {
                     connection.Open();
                     int filasAfectadas = command.ExecuteNonQuery();
-                    Console.WriteLine($"¡Registro insertado con éxito! Filas afectadas: {filasAfectadas}");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error al insertar: {ex.Message}");
-                    throw; 
+                    throw new Exception($"Error al insertar: {ex.Message}");
                 }
             }
         }
@@ -67,7 +65,6 @@ public class PymesService
                     
                     using (SqlDataReader reader = command.ExecuteReader())
                     {
-                        Console.WriteLine("\n--- Lista de Pymes ---"); // Corregido el texto de la consola
                         while (reader.Read())
                         {
                             // Es buena práctica validar si la columna viene NULL de la base de datos
@@ -88,7 +85,7 @@ public class PymesService
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error al consultar: {ex.Message}");
+                    throw new Exception($"Error al consultar: {ex.Message}");
                 }
             }
         }
@@ -117,12 +114,10 @@ public class PymesService
                 {
                     connection.Open();
                     int filasAfectadas = command.ExecuteNonQuery();
-                    Console.WriteLine($"¡Registro insertado con éxito! Filas afectadas: {filasAfectadas}");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error al insertar: {ex.Message}");
-                    throw; 
+                    throw new Exception($"Error al insertar: {ex.Message}");
                 }
             }
         }
@@ -144,7 +139,6 @@ public class PymesService
                     
                     using (SqlDataReader reader = command.ExecuteReader())
                     {
-                        Console.WriteLine("\n--- Lista de Pymes ---"); // Corregido el texto de la consola
                         while (reader.Read())
                         {
                             // Es buena práctica validar si la columna viene NULL de la base de datos
@@ -163,7 +157,7 @@ public class PymesService
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error al consultar: {ex.Message}");
+                    throw new Exception($"Error al consultar: {ex.Message}");
                 }
             }
         }
@@ -185,19 +179,16 @@ public class PymesService
         {
             using (SqlCommand command = new SqlCommand(query, connection))
             {
-                // Usamos SqlParameter para tipar y acotar exactamente igual que en SQL Server
                 command.Parameters.Add("@ID", SqlDbType.VarChar, 13).Value = (object)broker.Id ?? DBNull.Value;
                 command.Parameters.Add("@Nombre", SqlDbType.VarChar, 50).Value = (object)broker.Nombre ?? DBNull.Value;
                 try
                 {
                     connection.Open();
                     int filasAfectadas = command.ExecuteNonQuery();
-                    Console.WriteLine($"¡Registro insertado con éxito! Filas afectadas: {filasAfectadas}");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error al insertar: {ex.Message}");
-                    throw; 
+                    throw new Exception($"Error al insertar: {ex.Message}");
                 }
             }
         }
@@ -219,7 +210,6 @@ public class PymesService
                     
                     using (SqlDataReader reader = command.ExecuteReader())
                     {
-                        Console.WriteLine("\n--- Lista de Pymes ---"); // Corregido el texto de la consola
                         while (reader.Read())
                         {
                             // Es buena práctica validar si la columna viene NULL de la base de datos
@@ -238,7 +228,7 @@ public class PymesService
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error al consultar: {ex.Message}");
+                    throw new Exception($"Error al consultar: {ex.Message}");
                 }
             }
         }
