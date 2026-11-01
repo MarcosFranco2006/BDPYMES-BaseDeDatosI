@@ -12,7 +12,7 @@ public class PymesService
 {
     public string connectionString = "Server=.; Database=BDPYMES; Integrated Security=true; TrustServerCertificate=true;";
 
-    public Pyme InsertarDato(string connString, Pyme pyme)
+    public Pyme InsertarDatoPyme(Pyme pyme)
     {
         // Validación previa opcional en C# para asegurar los límites de la BD
         if (!string.IsNullOrEmpty(pyme.CUIT) && pyme.CUIT.Length > 13)
@@ -26,7 +26,7 @@ public class PymesService
 
         string query = "INSERT INTO PYMES (CUIT, Direccion, Razon_Social) VALUES (@CUIT, @Direccion, @Razon_Social)";
 
-        using (SqlConnection connection = new SqlConnection(connString))
+        using (SqlConnection connection = new SqlConnection(connectionString))
         {
             using (SqlCommand command = new SqlCommand(query, connection))
             {
@@ -52,12 +52,12 @@ public class PymesService
     }
 
     // Método para leer datos de la base de datos
-    public List<Pyme> ConsultarDatos(string connString)
+    public List<Pyme> ConsultarDatosPymes()
     {
         List<Pyme> pymes = new List<Pyme>();
         string query = "SELECT CUIT, Direccion, Razon_Social FROM PYMES";
 
-        using (SqlConnection connection = new SqlConnection(connString))
+        using (SqlConnection connection = new SqlConnection(connectionString))
         {
             using (SqlCommand command = new SqlCommand(query, connection))
             {
@@ -93,5 +93,80 @@ public class PymesService
             }
         }
         return pymes;
+    }
+
+    public Alyc InsertarDatoAlyc(Alyc alyc)
+    {
+        List<Alyc> alycs = ConsultarDatosAlycs();
+
+        if (!string.IsNullOrEmpty(alyc.Nombre) && alyc.Nombre.Length > 50)
+            throw new ArgumentException("El nombre no puede superar los 50 caracteres.");
+
+        alyc.Id = alycs.Count > 0 ? alycs.Max(x => x.Id) + 1 : 1;
+
+        string query = "INSERT INTO ALYCS (ID, Nombre) VALUES (@ID, @Nombre)";
+
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                // Usamos SqlParameter para tipar y acotar exactamente igual que en SQL Server
+                command.Parameters.Add("@ID", SqlDbType.VarChar, 13).Value = (object)alyc.Id ?? DBNull.Value;
+                command.Parameters.Add("@Nombre", SqlDbType.VarChar, 50).Value = (object)alyc.Nombre ?? DBNull.Value;
+                try
+                {
+                    connection.Open();
+                    int filasAfectadas = command.ExecuteNonQuery();
+                    Console.WriteLine($"¡Registro insertado con éxito! Filas afectadas: {filasAfectadas}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error al insertar: {ex.Message}");
+                    throw; 
+                }
+            }
+        }
+        return alyc;
+    }
+
+    public List<Alyc> ConsultarDatosAlycs()
+    {
+        List<Alyc> alycs = new List<Alyc>();
+        string query = "SELECT ID, Nombre FROM ALYCS";
+
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    connection.Open();
+                    
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        Console.WriteLine("\n--- Lista de Pymes ---"); // Corregido el texto de la consola
+                        while (reader.Read())
+                        {
+                            // Es buena práctica validar si la columna viene NULL de la base de datos
+                            int id = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                            string nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
+
+                            Alyc nuevaAlyc = new Alyc 
+                            { 
+                                Id = id, 
+                                Nombre = nombre, 
+                            };
+                            
+                            alycs.Add(nuevaAlyc);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error al consultar: {ex.Message}");
+                }
+            }
+        }
+        return alycs;
     }
 }

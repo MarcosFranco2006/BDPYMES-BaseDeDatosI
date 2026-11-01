@@ -2,7 +2,7 @@ using BDPYMES.LogicaServicio.Entidades;
 
 namespace BDPYMES.Api.DTOs;
 
-public static class ProductoMapper
+public static class PymeMapper
 {
     public static PymeResponse APymeResponse(this Pyme pyme)
     {

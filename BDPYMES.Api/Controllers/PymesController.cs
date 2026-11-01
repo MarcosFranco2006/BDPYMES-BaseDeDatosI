@@ -13,7 +13,6 @@ public class PymesController : ControllerBase
 {
     private readonly PymesService _servicio;
 
-    // El servicio llega por inyección de dependencias: está registrado en Program.cs.
     public PymesController(PymesService servicio)
     {
         _servicio = servicio;
@@ -23,19 +22,18 @@ public class PymesController : ControllerBase
     public IActionResult ObtenerTodos()
     {
         IEnumerable<PymeResponse> respuesta = _servicio
-            .ConsultarDatos(_servicio.connectionString)
-            .Select(producto => producto.APymeResponse());
+            .ConsultarDatosPymes()
+            .Select(x => x.APymeResponse());
 
         return Ok(respuesta);
     }
 
-    // POST api/producto
     [HttpPost]
     public IActionResult Crear([FromBody] PymeRequest request)
     {
         Pyme pyme = request.APyme();
 
-        _servicio.InsertarDato(_servicio.connectionString, pyme);
+        _servicio.InsertarDatoPyme(pyme);
 
         return StatusCode(201, pyme.APymeResponse());
     }
