@@ -386,4 +386,74 @@ public class PymesService
         }
         return sgrs;
     }
+
+        public Instrumento InsertarDatoInstrumento(Instrumento instrumento)
+    {
+        List<Instrumento> instrumentos = ConsultarDatosInstrumentos();
+
+        if (!string.IsNullOrEmpty(instrumento.TipoInstrumento) && instrumento.TipoInstrumento.Length > 50)
+            throw new ArgumentException("El Tipo de instrumento no puede superar los 50 caracteres.");
+
+        instrumento.Id = instrumentos.Count > 0 ? instrumentos.Max(x => x.Id) + 1 : 1;
+
+        string query = "INSERT INTO INSTRUMENTOS (ID, Tipo_Instrumento) VALUES (@ID, @Tipo_Instrumento)";
+
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.Add("@ID", SqlDbType.Int).Value = (object)instrumento.Id;
+                command.Parameters.Add("@Tipo_Instrumento", SqlDbType.VarChar, 50).Value = (object)instrumento.TipoInstrumento ?? DBNull.Value;
+                try
+                {
+                    connection.Open();
+                    int filasAfectadas = command.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error al insertar: {ex.Message}");
+                }
+            }
+        }
+        return instrumento;
+    }
+
+    public List<Instrumento> ConsultarDatosInstrumentos()
+    {
+        List<Instrumento> instrumentos = new List<Instrumento>();
+        string query = "SELECT ID, Tipo_Instrumento FROM INSTRUMENTOS";
+
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    connection.Open();
+                    
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            int id = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                            string tipoInstrumento = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
+
+                            Instrumento nuevoInstrumento = new Instrumento 
+                            { 
+                                Id = id, 
+                                TipoInstrumento = tipoInstrumento, 
+                            };
+                            
+                            instrumentos.Add(nuevoInstrumento);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error al consultar: {ex.Message}");
+                }
+            }
+        }
+        return instrumentos;
+    }
 }
