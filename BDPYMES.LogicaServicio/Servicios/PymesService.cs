@@ -231,10 +231,15 @@ public class PymesService
 
      public Garantia InsertarDatosGarantia(Garantia garantia)
     {
-        List<Broker> brokers = ConsultarDatosBrokers();
+        List<Garantia> garantias = ConsultarDatosGarantias();
+        List<Pyme> pymes = ConsultarDatosPymes();
 
         if (!string.IsNullOrEmpty(garantia.CuitPyme) && garantia.CuitPyme.Length > 13)
             throw new ArgumentException("El CUIT de la Pyme no puede superar los 13 caracteres.");
+
+        bool existePyme = pymes.Any(p => p.CUIT == garantia.CuitPyme);
+        if (!existePyme)
+            throw new ArgumentException($"No existe una Pyme cargada con el CUIT {garantia.CuitPyme}.");
 
         if (!string.IsNullOrEmpty(garantia.Descripcion) && garantia.Descripcion.Length > 50)
             throw new ArgumentException("La descripcion no puede superar los 50 caracteres.");
@@ -242,7 +247,7 @@ public class PymesService
         if (garantia.Monto <= 0)
             throw new ArgumentException("El monto tiene que ser mayor a $0");
 
-        garantia.Id = brokers.Count > 0 ? brokers.Max(x => x.Id) + 1 : 1;
+        garantia.Id = garantias.Count > 0 ? garantias.Max(x => x.Id) + 1 : 1;
 
         string query = "INSERT INTO GARANTIAS (ID, CUIT_PYME, Descripcion, Monto) VALUES (@ID, @CUIT_PYME, @Descripcion, @Monto)";
 
