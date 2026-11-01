@@ -387,7 +387,7 @@ public class PymesService
         return sgrs;
     }
 
-        public Instrumento InsertarDatoInstrumento(Instrumento instrumento)
+    public Instrumento InsertarDatoInstrumento(Instrumento instrumento)
     {
         List<Instrumento> instrumentos = ConsultarDatosInstrumentos();
 
@@ -455,5 +455,82 @@ public class PymesService
             }
         }
         return instrumentos;
+    }
+
+    public TasaInteres InsertarDatoTasaInteres(TasaInteres tasaInteres)
+    {
+        List<TasaInteres> tasasInteres = ConsultarDatosTasasInteres();
+        List<Instrumento> instrumentos = ConsultarDatosInstrumentos();
+
+        bool existeInstrumento = instrumentos.Any(i => i.Id == tasaInteres.IdInstrumento);
+        if (!existeInstrumento)
+            throw new ArgumentException($"No hay cargado un instrumento con el ID {tasaInteres.IdInstrumento}.");
+
+        string query = "INSERT INTO [TASAS/INTERES] (ID_INSTRUMENTO, Ultima_Actualizacion, Tasa_Interes) VALUES (@ID_INSTRUMENTO, @Ultima_Actualizacion, @Tasa_Interes)";
+
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.Add("@ID_INSTRUMENTO", SqlDbType.Int).Value = (object)tasaInteres.IdInstrumento;
+                command.Parameters.Add("@Ultima_Actualizacion", SqlDbType.DateTime).Value = DateTime.Now;
+                SqlParameter param = command.Parameters.Add("@Tasa_Interes", SqlDbType.Decimal);
+                param.Precision = 6;
+                param.Scale = 3;
+                param.Value = (object)tasaInteres.TasaDeInteres; 
+
+                try
+                {
+                    connection.Open();
+                    int filasAfectadas = command.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error al insertar: {ex.Message}");
+                }
+            }
+        }
+        return tasaInteres;
+    }
+
+    public List<TasaInteres> ConsultarDatosTasasInteres()
+    {
+        List<TasaInteres> tasasInteres = new List<TasaInteres>();
+        string query = "SELECT ID_Instrumento, Ultima_Actualizacion, Tasa_Interes FROM [TASAS/INTERES]";
+
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    connection.Open();
+                    
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            int idInstrumento = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                            DateTime ultimaActualizacion = reader.GetDateTime(1);
+                            decimal tasaDeInteres = reader.IsDBNull(2) ? 0 : reader.GetDecimal(2);
+
+                            TasaInteres nuevaTasaInteres = new TasaInteres 
+                            { 
+                                IdInstrumento = idInstrumento, 
+                                UltimaActualizacion = ultimaActualizacion,
+                                TasaDeInteres =  tasaDeInteres
+                            };
+                            
+                            tasasInteres.Add(nuevaTasaInteres);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error al consultar: {ex.Message}");
+                }
+            }
+        }
+        return tasasInteres;
     }
 }
