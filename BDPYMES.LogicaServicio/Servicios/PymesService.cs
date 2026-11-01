@@ -14,7 +14,6 @@ public class PymesService
 
     public Pyme InsertarDatoPyme(Pyme pyme)
     {
-        // Validación previa opcional en C# para asegurar los límites de la BD
         if (!string.IsNullOrEmpty(pyme.CUIT) && pyme.CUIT.Length > 13)
             throw new ArgumentException("El CUIT no puede superar los 13 caracteres.");
 
@@ -30,8 +29,7 @@ public class PymesService
         {
             using (SqlCommand command = new SqlCommand(query, connection))
             {
-                // Usamos SqlParameter para tipar y acotar exactamente igual que en SQL Server
-                command.Parameters.Add("@CUIT", SqlDbType.VarChar, 13).Value = (object)pyme.CUIT ?? DBNull.Value;
+                command.Parameters.Add("@CUIT", SqlDbType.VarChar, 13).Value = (object)pyme.CUIT;
                 command.Parameters.Add("@Direccion", SqlDbType.VarChar, 50).Value = (object)pyme.Direccion ?? DBNull.Value;
                 command.Parameters.Add("@Razon_Social", SqlDbType.VarChar, 50).Value = (object)pyme.Razon_Social ?? DBNull.Value;
 
@@ -49,7 +47,6 @@ public class PymesService
         return pyme;
     }
 
-    // Método para leer datos de la base de datos
     public List<Pyme> ConsultarDatosPymes()
     {
         List<Pyme> pymes = new List<Pyme>();
@@ -67,7 +64,6 @@ public class PymesService
                     {
                         while (reader.Read())
                         {
-                            // Es buena práctica validar si la columna viene NULL de la base de datos
                             string cuit = reader.IsDBNull(0) ? string.Empty : reader.GetString(0);
                             string direccion = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
                             string razonSocial = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
@@ -107,8 +103,7 @@ public class PymesService
         {
             using (SqlCommand command = new SqlCommand(query, connection))
             {
-                // Usamos SqlParameter para tipar y acotar exactamente igual que en SQL Server
-                command.Parameters.Add("@ID", SqlDbType.VarChar, 13).Value = (object)alyc.Id ?? DBNull.Value;
+                command.Parameters.Add("@ID", SqlDbType.Int).Value = (object)alyc.Id;
                 command.Parameters.Add("@Nombre", SqlDbType.VarChar, 50).Value = (object)alyc.Nombre ?? DBNull.Value;
                 try
                 {
@@ -164,7 +159,7 @@ public class PymesService
         return alycs;
     }
 
-        public Broker InsertarDatoBroker(Broker broker)
+    public Broker InsertarDatoBroker(Broker broker)
     {
         List<Broker> brokers = ConsultarDatosBrokers();
 
@@ -179,7 +174,7 @@ public class PymesService
         {
             using (SqlCommand command = new SqlCommand(query, connection))
             {
-                command.Parameters.Add("@ID", SqlDbType.VarChar, 13).Value = (object)broker.Id ?? DBNull.Value;
+                command.Parameters.Add("@ID", SqlDbType.Int).Value = (object)broker.Id;
                 command.Parameters.Add("@Nombre", SqlDbType.VarChar, 50).Value = (object)broker.Nombre ?? DBNull.Value;
                 try
                 {
@@ -212,7 +207,6 @@ public class PymesService
                     {
                         while (reader.Read())
                         {
-                            // Es buena práctica validar si la columna viene NULL de la base de datos
                             int id = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
                             string nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
 
@@ -233,5 +227,88 @@ public class PymesService
             }
         }
         return brokers;
+    }
+
+     public Garantia InsertarDatosGarantia(Garantia garantia)
+    {
+        List<Broker> brokers = ConsultarDatosBrokers();
+
+        if (!string.IsNullOrEmpty(garantia.CuitPyme) && garantia.CuitPyme.Length > 13)
+            throw new ArgumentException("El CUIT de la Pyme no puede superar los 13 caracteres.");
+
+        if (!string.IsNullOrEmpty(garantia.Descripcion) && garantia.Descripcion.Length > 50)
+            throw new ArgumentException("La descripcion no puede superar los 50 caracteres.");
+
+        if (garantia.Monto <= 0)
+            throw new ArgumentException("El monto tiene que ser mayor a $0");
+
+        garantia.Id = brokers.Count > 0 ? brokers.Max(x => x.Id) + 1 : 1;
+
+        string query = "INSERT INTO GARANTIAS (ID, CUIT_PYME, Descripcion, Monto) VALUES (@ID, @CUIT_PYME, @Descripcion, @Monto)";
+
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.Add("@ID", SqlDbType.Int).Value = (object)garantia.Id;
+                command.Parameters.Add("@CUIT_PYME", SqlDbType.VarChar, 13).Value = (object)garantia.CuitPyme;
+                command.Parameters.Add("@Descripcion", SqlDbType.VarChar, 50).Value = (object)garantia.Descripcion ?? DBNull.Value;
+                command.Parameters.Add("@Monto", SqlDbType.Money).Value = (object)garantia.Monto;
+
+                try
+                {
+                    connection.Open();
+                    int filasAfectadas = command.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error al insertar: {ex.Message}");
+                }
+            }
+        }
+        return garantia;
+    }
+
+    public List<Garantia> ConsultarDatosGarantias()
+    {
+        List<Garantia> garantias = new List<Garantia>();
+        string query = "SELECT ID, CUIT_PYME, Descripcion, Monto FROM GARANTIAS";
+
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    connection.Open();
+                    
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            int id = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                            string cuitPyme = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
+                            string descripcion = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
+                            decimal monto = reader.IsDBNull(3) ? 0.00m : reader.GetDecimal(3);
+
+                            Garantia nuevaGarantia = new Garantia 
+                            { 
+                                Id = id, 
+                                CuitPyme = cuitPyme,
+                                Descripcion = descripcion,
+                                Monto = monto 
+                            };
+                            
+                            garantias.Add(nuevaGarantia);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error al consultar: {ex.Message}");
+                }
+            }
+        }
+        return garantias;
     }
 }
