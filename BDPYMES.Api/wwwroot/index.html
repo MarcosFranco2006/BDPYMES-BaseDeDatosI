@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BDPYMES · Panel de gestión</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <aside class="lateral">
+            <div class="marca">
+                <span class="marca-logo">BD</span>
+                <div>
+                    <strong>BDPYMES</strong>
+                    <small>Base de Datos I</small>
+                </div>
+            </div>
+            <nav id="menu" aria-label="Secciones"></nav>
+        </aside>
+
+        <div class="contenido">
+            <header class="barra">
+                <div>
+                    <h1 id="titulo"></h1>
+                    <p id="subtitulo"></p>
+                </div>
+                <span id="conexion" class="chip">Conectando…</span>
+            </header>
+
+            <main>
+                <section class="tarjeta">
+                    <h2>Nuevo registro</h2>
+                    <form id="formulario" novalidate></form>
+                </section>
+
+                <section class="tarjeta">
+                    <div class="listado-cab">
+                        <h2>Listado <span id="contador" class="contador"></span></h2>
+                        <div class="listado-acciones">
+                            <input id="buscador" type="search" placeholder="Buscar…" aria-label="Buscar en el listado">
+                            <button id="recargar" type="button" class="secundario">Recargar</button>
+                        </div>
+                    </div>
+
+                    <div class="tabla-wrap">
+                        <table class="tabla">
+                            <thead id="cabecera"></thead>
+                            <tbody id="cuerpo-tabla"></tbody>
+                        </table>
+                    </div>
+                    <p id="vacio" class="vacio" hidden>No hay registros para mostrar.</p>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div id="aviso" class="aviso" role="status" aria-live="polite"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
