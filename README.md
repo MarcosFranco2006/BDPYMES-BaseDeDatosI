@@ -10,7 +10,7 @@ En la terminal de VSCode escribir el siguiente comando 'git clone https://github
 # Crear la base de datos
 Requisito: SQL Server con SQL Server Management Studio (SSMS).
 
-1. Crear en el disco C: las carpetas que usa el script para los archivos físicos de la base: 'C:\BDD-PYME\SSD(A)', 'C:\BDD-PYME\SSD(B)', 'C:\BDD-PYME\SSD(G)', 'C:\BDD-PYME\SSD(H)', 'C:\BDD-PYME\RAID5(E)', 'C:\BDD-PYME\RAID5(F)', 'C:\BDD-PYME\RAID5(I)' y 'C:\BDD-PYME\RAID5(J)'. SQL Server no crea las carpetas, si no existen el script falla.
+1. Crear en el disco C: las carpetas que usa el script para los archivos físicos de la base: 'C:\BDD-PYME\SSD(A)', 'C:\BDD-PYME\SSD(B)', 'C:\BDD-PYME\SSD(G)', 'C:\BDD-PYME\SSD(H)', 'C:\BDD-PYME\RAID5(E)', 'C:\BDD-PYME\RAID5(F)', 'C:\BDD-PYME\RAID5(I)' y 'C:\BDD-PYME\RAID5(J)'. SQL Server no crea las carpetas, si no existen el script falla. Está adjunta en un .rar la carpeta contenedora BDD-PYME en la carpeta CarpetasDeDatos de este repositorio.
 2. Abrir en SSMS el archivo 'BaseDeDatos/levantar-base-de-datos.sql' y ejecutarlo. Crea la base 'BDD-PYME' con sus grupos de archivos, tablas, restricciones, la vista 'VW_Operaciones_Pymes', el procedimiento almacenado 'SP_RegistrarTasaConValidacion' y el trigger 'TR_Auditoria_Operaciones'.
 3. Abrir y ejecutar 'BaseDeDatos/datos-de-prueba.sql' para cargar datos de ejemplo.
 
