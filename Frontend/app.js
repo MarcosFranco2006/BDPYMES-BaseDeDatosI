@@ -176,72 +176,158 @@ botonRecargar.addEventListener("click", cargar);
 // Primera carga al abrir la página.
 cargar();
 
-// ---------- Garantías (GET y POST a /api/Garantias) ----------
-const formGarantia = document.getElementById("form-garantia");
-const campoCuit = document.getElementById("g-cuit");
-const campoDesc = document.getElementById("g-desc");
-const campoMonto = document.getElementById("g-monto");
-const botonGarantia = document.getElementById("g-guardar");
-const cuerpoGarantias = document.getElementById("cuerpo-garantias");
-const vacioGarantias = document.getElementById("vacio-garantias");
+// ---------- Garantías, disponibilidad y auditoría ----------
 
+// ── Garantías ──
 async function cargarGarantias() {
-    let garantias = [];
-    try {
-        garantias = await pedir("Garantias");
-    } catch (error) {
-        mostrarAviso(error.message, "error");
-    }
+    const estado = document.getElementById("estado-garantias");
 
-    cuerpoGarantias.innerHTML = "";
-    for (const g of garantias) {
-        const fila = document.createElement("tr");
-        fila.append(
-            celda(valorDe(g, "id"), "num"),
-            celda(valorDe(g, "cuitPyme"), "num"),
-            celda(valorDe(g, "descripcion") || "—"),
-            celda(formatearMonto(valorDe(g, "monto")), "num")
-        );
-        cuerpoGarantias.appendChild(fila);
+    try {
+        const response = await fetch(API_URL + "Garantias");
+        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+
+        const garantias = await response.json();
+
+        document.getElementById("cuerpo-garantias").innerHTML = garantias.map(g => `
+            <tr>
+                <td class="num">${g.id}</td>
+                <td class="num">${g.cuitPyme}</td>
+                <td>${g.descripcion}</td>
+                <td class="num">$${g.monto.toLocaleString("es-AR")}</td>
+            </tr>
+        `).join("");
+
+        estado.textContent = garantias.length === 0 ? "No hay garantías cargadas." : "";
+    } catch (error) {
+        estado.textContent = "No se pudieron cargar las garantías. Verificá que la API esté corriendo.";
+        console.error(error);
     }
-    vacioGarantias.hidden = garantias.length > 0;
 }
 
-formGarantia.addEventListener("submit", async (evento) => {
-    evento.preventDefault();
+async function crearGarantia(nueva) {
+    const response = await fetch(API_URL + "Garantias", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nueva),
+    });
 
-    const cuitPyme = Number(campoCuit.value);
-    const descripcion = campoDesc.value.trim();
-    const monto = Number(campoMonto.value);
-
-    const cuitValido = campoCuit.value.trim() !== "" && Number.isInteger(cuitPyme) && cuitPyme > 0;
-    const descValida = descripcion.length > 0 && descripcion.length <= 50;
-    const montoValido = campoMonto.value.trim() !== "" && Number.isFinite(monto) && monto > 0;
-
-    campoCuit.classList.toggle("invalido", !cuitValido);
-    campoDesc.classList.toggle("invalido", !descValida);
-    campoMonto.classList.toggle("invalido", !montoValido);
-
-    if (!cuitValido || !descValida || !montoValido) {
-        mostrarAviso("Revisá los datos: CUIT numérico, descripción de hasta 50 caracteres y monto mayor a 0.", "error");
-        return;
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detalle || `Error HTTP: ${response.status}`);
     }
+    return response.json();
+}
 
-    botonGarantia.disabled = true;
+// ── Disponibilidad de garantías ──
+async function cargarDisponibilidad() {
+    const estado = document.getElementById("estado-disponibilidad");
+
     try {
-        await pedir("Garantias", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ cuitPyme, descripcion, monto })
-        });
-        formGarantia.reset();
-        mostrarAviso("Garantía registrada correctamente.", "ok");
-        cargarGarantias();
-    } catch (error) {
-        mostrarAviso(error.message, "error");
-    } finally {
-        botonGarantia.disabled = false;
-    }
-});
+        const response = await fetch(API_URL + "GarantiasDisponibilidad");
+        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
 
-cargarGarantias();
+        const disponibilidades = await response.json();
+
+        document.getElementById("cuerpo-disponibilidad").innerHTML = disponibilidades.map(d => `
+            <tr>
+                <td class="num">${d.idGarantia}</td>
+                <td>${d.fechaDesde}</td>
+                <td>${d.fechaHasta}</td>
+                <td class="num">${d.idOperacion}</td>
+            </tr>
+        `).join("");
+
+        estado.textContent = disponibilidades.length === 0 ? "No hay disponibilidades cargadas." : "";
+    } catch (error) {
+        estado.textContent = "No se pudo cargar la disponibilidad. Verificá que la API esté corriendo.";
+        console.error(error);
+    }
+}
+
+async function crearDisponibilidad(nueva) {
+    const response = await fetch(API_URL + "GarantiasDisponibilidad", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nueva),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detalle || `Error HTTP: ${response.status}`);
+    }
+    return response.json();
+}
+
+// ── Auditoría de operaciones (solo lectura: la completa el trigger) ──
+async function cargarAuditoria() {
+    const estado = document.getElementById("estado-auditoria");
+
+    try {
+        const response = await fetch(API_URL + "OperacionesAuditoria");
+        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+
+        const registros = await response.json();
+
+        document.getElementById("cuerpo-auditoria").innerHTML = registros.map(r => `
+            <tr>
+                <td class="num">${r.idOperacion}</td>
+                <td>${r.fechaOperacion}</td>
+                <td class="num">$${r.montoOperacion.toLocaleString("es-AR")}</td>
+                <td>${r.tipoAccion}</td>
+            </tr>
+        `).join("");
+
+        estado.textContent = registros.length === 0 ? "No hay registros de auditoría." : "";
+    } catch (error) {
+        estado.textContent = "No se pudo cargar la auditoría. Verificá que la API esté corriendo.";
+        console.error(error);
+    }
+}
+
+// ── Carga inicial y eventos ──
+document.addEventListener("DOMContentLoaded", () => {
+    cargarGarantias();
+    cargarDisponibilidad();
+    cargarAuditoria();
+
+    document.getElementById("recargar-auditoria").addEventListener("click", cargarAuditoria);
+
+    document.getElementById("form-garantia").addEventListener("submit", async (event) => {
+        event.preventDefault(); // el navegador ya validó required/min/minlength
+
+        const nueva = {
+            cuitPyme: parseInt(document.getElementById("g-cuit").value),
+            descripcion: document.getElementById("g-desc").value.trim(),
+            monto: parseFloat(document.getElementById("g-monto").value),
+        };
+
+        try {
+            await crearGarantia(nueva);
+            event.target.reset();
+            mostrarAviso("Garantía registrada correctamente.", "ok");
+            await cargarGarantias();
+        } catch (error) {
+            mostrarAviso(error.message, "error");
+        }
+    });
+
+    document.getElementById("form-disponibilidad").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const nueva = {
+            idGarantia: parseInt(document.getElementById("d-garantia").value),
+            fechaDesde: document.getElementById("d-desde").value,
+            fechaHasta: document.getElementById("d-hasta").value,
+            idOperacion: parseInt(document.getElementById("d-operacion").value),
+        };
+
+        try {
+            await crearDisponibilidad(nueva);
+            event.target.reset();
+            mostrarAviso("Disponibilidad registrada correctamente.", "ok");
+            await cargarDisponibilidad();
+        } catch (error) {
+            mostrarAviso(error.message, "error");
+        }
+    });
+});

@@ -138,11 +138,17 @@ code {
 
 /* ---------- Formulario ---------- */
 #formulario,
-#form-garantia {
+#form-garantia,
+#form-disponibilidad {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
     gap: 16px;
     align-items: end;
+}
+
+#form-garantia,
+#form-disponibilidad {
+    margin-bottom: 16px;
 }
 
 .campo { display: grid; gap: 6px; }

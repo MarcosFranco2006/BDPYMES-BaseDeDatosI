@@ -83,25 +83,25 @@
             <h2>Garantías</h2>
             <p class="nota">Alta y listado de la tabla <code>GARANTIAS</code>.</p>
 
-            <form id="form-garantia" novalidate>
+            <form id="form-garantia">
                 <div class="campo">
                     <label for="g-cuit">CUIT de la PyME</label>
-                    <input id="g-cuit" type="number" min="1" step="1" placeholder="Ej: 301234567" required>
+                    <input type="number" id="g-cuit" min="1" placeholder="Ej: 301234567" required>
                 </div>
                 <div class="campo">
                     <label for="g-desc">Descripción</label>
-                    <input id="g-desc" type="text" maxlength="50" placeholder="Ej: Hipoteca galpón" required>
+                    <input type="text" id="g-desc" minlength="2" maxlength="50" placeholder="Ej: Hipoteca galpón" required>
                 </div>
                 <div class="campo">
                     <label for="g-monto">Monto</label>
-                    <input id="g-monto" type="number" min="0.01" step="0.01" placeholder="Ej: 500000" required>
+                    <input type="number" id="g-monto" min="0.01" step="0.01" placeholder="Ej: 500000" required>
                 </div>
                 <div class="campo">
-                    <button type="submit" id="g-guardar">Registrar garantía</button>
+                    <button type="submit">Registrar garantía</button>
                 </div>
             </form>
 
-            <div class="tabla-wrap" style="margin-top:16px">
+            <div class="tabla-wrap">
                 <table class="tabla">
                     <thead>
                         <tr>
@@ -114,7 +114,76 @@
                     <tbody id="cuerpo-garantias"></tbody>
                 </table>
             </div>
-            <p id="vacio-garantias" class="vacio" hidden>No hay garantías cargadas.</p>
+            <p id="estado-garantias" class="nota"></p>
+        </section>
+
+        <section class="tarjeta">
+            <h2>Disponibilidad de garantías</h2>
+            <p class="nota">Alta y listado de la tabla <code>GARANTIASDISPONIBLIDAD</code>.</p>
+
+            <form id="form-disponibilidad">
+                <div class="campo">
+                    <label for="d-garantia">ID de la garantía</label>
+                    <input type="number" id="d-garantia" min="1" placeholder="Ej: 1" required>
+                </div>
+                <div class="campo">
+                    <label for="d-operacion">ID de la operación</label>
+                    <input type="number" id="d-operacion" min="1" placeholder="Ej: 1" required>
+                </div>
+                <div class="campo">
+                    <label for="d-desde">Fecha desde</label>
+                    <input type="date" id="d-desde" required>
+                </div>
+                <div class="campo">
+                    <label for="d-hasta">Fecha hasta</label>
+                    <input type="date" id="d-hasta" required>
+                </div>
+                <div class="campo">
+                    <button type="submit">Registrar disponibilidad</button>
+                </div>
+            </form>
+
+            <div class="tabla-wrap">
+                <table class="tabla">
+                    <thead>
+                        <tr>
+                            <th class="num">ID garantía</th>
+                            <th>Desde</th>
+                            <th>Hasta</th>
+                            <th class="num">ID operación</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-disponibilidad"></tbody>
+                </table>
+            </div>
+            <p id="estado-disponibilidad" class="nota"></p>
+        </section>
+
+        <section class="tarjeta">
+            <div class="listado-cab">
+                <div>
+                    <h2>Auditoría de operaciones</h2>
+                    <p class="nota">Tabla <code>OPERACIONES_AUDITORIA</code>, que completa el trigger <code>TR_Auditoria_Operaciones</code>.</p>
+                </div>
+                <div class="listado-acciones">
+                    <button id="recargar-auditoria" type="button" class="secundario">Recargar</button>
+                </div>
+            </div>
+
+            <div class="tabla-wrap">
+                <table class="tabla">
+                    <thead>
+                        <tr>
+                            <th class="num">ID operación</th>
+                            <th>Fecha</th>
+                            <th class="num">Monto</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-auditoria"></tbody>
+                </table>
+            </div>
+            <p id="estado-auditoria" class="nota"></p>
         </section>
     </main>
 
