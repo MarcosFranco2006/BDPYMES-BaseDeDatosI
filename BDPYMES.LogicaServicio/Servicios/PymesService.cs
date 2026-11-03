@@ -857,4 +857,82 @@ public class PymesService
         return operacionesAuditoria;
     }
 
+    public GarantiaAlyc InsertarDatoGarantiaAlyc(GarantiaAlyc garantiaAlyc)
+    {
+    if (garantiaAlyc == null)
+        throw new ArgumentNullException(nameof(garantiaAlyc));
+
+    List<Alyc> alycs = ConsultarDatosAlycs();
+    if (!alycs.Any(a => a.Id == garantiaAlyc.IdAlyc))
+        throw new ArgumentException($"No existe una ALYC con el ID {garantiaAlyc.IdAlyc}.");
+
+    List<Garantia> garantias = ConsultarDatosGarantias();
+    if (!garantias.Any(g => g.Id == garantiaAlyc.IdGarantia))
+        throw new ArgumentException($"No existe una garantía con el ID {garantiaAlyc.IdGarantia}.");
+
+    string query = "INSERT INTO [GARANTIAS/ALYCs] ([[ID-ALYC], [ID-GARANTIA]) " +
+                   "VALUES (@IdAlyc, @IdGarantia)";
+
+    using (SqlConnection connection = new SqlConnection(connectionString))
+    {
+        using (SqlCommand command = new SqlCommand(query, connection))
+        {
+            command.Parameters.Add("@IdAlyc", SqlDbType.Int).Value = garantiaAlyc.IdAlyc;
+            command.Parameters.Add("@IdGarantia", SqlDbType.Int).Value = garantiaAlyc.IdGarantia;
+
+            try
+            {
+                connection.Open();
+                command.ExecuteNonQuery();
+            }
+            catch (SqlException ex)
+            {
+                if (ex.Number == 2627)
+                    throw new ArgumentException("Esa garantía ya está asociada a esa ALYC.");
+
+                throw new Exception($"Error al insertar: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al insertar: {ex.Message}");
+            }
+        }
+    }
+    return garantiaAlyc;
 }
+
+public List<GarantiaAlyc> ConsultarDatosGarantiasAlycs()
+    {
+    List<GarantiaAlyc> garantiasAlycs = new List<GarantiaAlyc>();
+    string query = "SELECT [[ID-ALYC], [ID-GARANTIA] FROM [GARANTIAS/ALYCs]";
+
+    using (SqlConnection connection = new SqlConnection(connectionString))
+    {
+        using (SqlCommand command = new SqlCommand(query, connection))
+        {
+            try
+            {
+                connection.Open();
+
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        garantiasAlycs.Add(new GarantiaAlyc
+                        {
+                            IdAlyc = reader.GetInt32(0),
+                            IdGarantia = reader.GetInt32(1)
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al consultar: {ex.Message}");
+            }
+        }
+    }
+    return garantiasAlycs;
+    }
+}
+
