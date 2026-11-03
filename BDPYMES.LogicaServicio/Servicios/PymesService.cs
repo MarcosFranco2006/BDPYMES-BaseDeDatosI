@@ -1,18 +1,121 @@
 using System;
-using System.Data;
+using System.Buffers.Binary;
 using System.Collections.Generic;
-using System.Linq;
+using System.Data;
 using BDPYMES.LogicaServicio.Entidades;
-
 using Microsoft.Data.SqlClient;
 
 namespace BDPYMES.LogicaServicio.Servicios;
 
+// Acceso a la base BDD-PYME con ADO.NET (Microsoft.Data.SqlClient).
+// Hace solo dos cosas, las que pide la cátedra:
+//   1) leer una VISTA            -> VW_Operaciones_Pymes
+//   2) llamar a un STORED PROC   -> SP_RegistrarTasaConValidacion
 public class PymesService
 {
-    public string connectionString = "Server=.; Database=BDPYMES; Integrated Security=true; TrustServerCertificate=true;";
+    private readonly string _connectionString;
 
-    public Pyme InsertarDatoPyme(Pyme pyme)
+    // La cadena de conexión viene de appsettings.json (ver Program.cs).
+    public PymesService(string connectionString)
+    {
+        _connectionString = connectionString;
+    }
+
+    public string connectionString = "Server=.;Database=BDD-PYME;Integrated Security=true;TrustServerCertificate=true;";
+
+    // ---------- VISTA ----------
+    public List<OperacionPyme> ConsultarOperaciones()
+    {
+        List<OperacionPyme> operaciones = new List<OperacionPyme>();
+
+        const string query =
+            "SELECT [ID-OPERACION], [CUIT-PYME], PyME_RazonSocial, MontoOperacion, Estado " +
+            "FROM VW_Operaciones_Pymes";
+
+        try
+        {
+            using SqlConnection connection = new SqlConnection(_connectionString);
+            using SqlCommand command = new SqlCommand(query, connection);
+
+            connection.Open();
+
+            using SqlDataReader reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                operaciones.Add(new OperacionPyme
+                {
+                    IdOperacion = reader.GetInt32(0),
+                    CuitPyme = reader.GetInt32(1),
+                    RazonSocial = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    // MontoOperacion es varbinary en la base: llega como byte[].
+                    MontoOperacion = reader.IsDBNull(3) ? string.Empty : ConvertirMonto((byte[])reader.GetValue(3)),
+                    Estado = reader.IsDBNull(4) ? string.Empty : reader.GetString(4)
+                });
+            }
+        }
+        catch (SqlException ex)
+        {
+            throw new Exception($"Error al consultar la vista: {ex.Message}", ex);
+        }
+
+        return operaciones;
+    }
+
+    // ---------- STORED PROCEDURE ----------
+    public void RegistrarTasa(int idInstrumento, decimal tasaInteres)
+    {
+        if (idInstrumento <= 0)
+            throw new ArgumentException("El ID del instrumento debe ser mayor a cero.");
+
+        // La columna TazaDeInteres es decimal(5,2): el máximo es 999,99.
+        if (tasaInteres < 0 || tasaInteres > 999.99m)
+            throw new ArgumentException("La tasa de interés debe estar entre 0 y 999,99.");
+
+        try
+        {
+            using SqlConnection connection = new SqlConnection(_connectionString);
+            using SqlCommand command = new SqlCommand("SP_RegistrarTasaConValidacion", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.Add("@IdInstrumento", SqlDbType.Int).Value = idInstrumento;
+
+            // El SP declara @TasaInteres como DECIMAL(6,3).
+            SqlParameter parametroTasa = command.Parameters.Add("@TasaInteres", SqlDbType.Decimal);
+            parametroTasa.Precision = 6;
+            parametroTasa.Scale = 3;
+            parametroTasa.Value = tasaInteres;
+
+            connection.Open();
+            command.ExecuteNonQuery();
+        }
+        // Los RAISERROR del SP (por ejemplo "El instrumento especificado no existe.")
+        // llegan con Number = 50000: son errores de datos, no de servidor.
+        catch (SqlException ex) when (ex.Number == 50000)
+        {
+            throw new ArgumentException(ex.Message);
+        }
+        catch (SqlException ex)
+        {
+            throw new Exception($"Error al registrar la tasa: {ex.Message}", ex);
+        }
+    }
+
+    // varbinary -> texto legible. Si son 4 u 8 bytes los interpretamos como un
+    // número entero (así lo guarda CONVERT(varbinary, número)); si no, hexadecimal.
+    private static string ConvertirMonto(byte[] bytes)
+    {
+        if (bytes.Length == 4)
+            return BinaryPrimitives.ReadInt32BigEndian(bytes).ToString();
+
+        if (bytes.Length == 8)
+            return BinaryPrimitives.ReadInt64BigEndian(bytes).ToString();
+
+        return "0x" + Convert.ToHexString(bytes);
+    }
+
+        public Pyme InsertarDatoPyme(Pyme pyme)
     {
         if (!string.IsNullOrEmpty(pyme.CUIT) && pyme.CUIT.Length > 13)
             throw new ArgumentException("El CUIT no puede superar los 13 caracteres.");

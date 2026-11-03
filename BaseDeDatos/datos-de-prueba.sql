@@ -1,0 +1,30 @@
+-- Datos de prueba para BDD-PYME (ejecutar DESPUÉS del script que crea la base).
+-- Sirven para ver algo en la vista y para poder registrar tasas con el SP.
+USE [BDD-PYME];
+GO
+
+INSERT INTO PYMES ([CUIT-PYME], Direccion, RazonSocial) VALUES
+    (301234567, 'San Martin 123', 'Panificadora Del Sur SRL'),
+    (302345678, 'Belgrano 456',   'Metalurgica Rafaela SA');
+
+INSERT INTO ALYCs ([ID-ALYCS], NombreALYC) VALUES (1, 'ALYC Uno'), (2, 'ALYC Dos');
+
+INSERT INTO BROKERS ([ID-BROKER], NombreBroker) VALUES (1, 'Broker Uno'), (2, 'Broker Dos');
+
+INSERT INTO INSTRUMENTOS ([ID-INSTRUMENTO], TipoInstrumento) VALUES
+    (1, 'Cheque de pago diferido'),
+    (2, 'Pagare');
+
+INSERT INTO SGRs ([ID-SGR], [Nombre-SGR]) VALUES (1, 'SGR Uno'), (2, 'SGR Dos');
+
+-- MontoOperacion es varbinary: se guarda con CONVERT(varbinary(50), numero).
+INSERT INTO OPERACIONES
+    ([ID-OPERACION], [CUIT-PYME], [ID-ALYC], [ID-BROKER], [ID-INSTRUMENTO], [ID-SGR], Estado, MontoOperacion)
+VALUES
+    (1, 301234567, 1, 1, 1, 1, 'Aprobada',  CONVERT(varbinary(50), 150000)),
+    (2, 302345678, 2, 2, 2, 2, 'Pendiente', CONVERT(varbinary(50), 320000));
+GO
+
+-- Comprobar:
+SELECT * FROM VW_Operaciones_Pymes;
+
