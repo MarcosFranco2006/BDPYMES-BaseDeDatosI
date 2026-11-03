@@ -325,7 +325,7 @@ public class PymesService
             {
                 command.Parameters.Add("@ID", SqlDbType.Int).Value = (object)garantia.Id;
                 command.Parameters.Add("@CUIT_PYME", SqlDbType.Int).Value = (object)garantia.CuitPyme;
-                command.Parameters.Add("@Descripcion", SqlDbType.VarChar, 32).Value = (object)garantia.Descripcion ?? DBNull.Value;
+                command.Parameters.Add("@Descripcion", SqlDbType.VarChar, 50).Value = (object)garantia.Descripcion ?? DBNull.Value;
                 command.Parameters.Add("@Monto", SqlDbType.Money).Value = (object)garantia.Monto;
 
                 try
