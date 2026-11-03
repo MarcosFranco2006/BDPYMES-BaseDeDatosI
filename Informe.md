@@ -224,3 +224,23 @@ Registro histórico de acciones sobre las operaciones. No tiene claves foráneas
 | FechaOperacion | | Fecha en que ocurrió la acción |
 | MontoOperacion | | Monto de la operación al momento de la acción |
 | TipoAccion | | Tipo de acción registrada (por ejemplo, alta, modificación, baja) |
+
+# Aplicación .NET
+
+  Para la aplicación .NET utilizamos la librería 'Microsoft.Data.SqlClient' para poder comunicarnos con nuestra base de datos.
+
+  El funcionamiento es simple, en PymesService.cs tenemos nuestra clave para conectarnos a la Base de Datos mientras está encendida (connectionString = "Server=.;Database=BDD-PYME;Integrated Security=true;TrustServerCertificate=true;";).
+
+  Cada método que aparece después repite un mismo algoritmo:
+- Se realizan validaciones si son necesarias.
+- Crean la sentencia SQL o llama a un procedimiento almacenado (caso RegistrarTasa).
+- Intentan comunicarse con la base de datos (try), si no se puede se informa del error (catch).
+- En el caso de conectarse exitosamente hay dos métodos disponibles GET y POST, es decir SELECT e INSERT en SQL, solo se permite Ingresar datos y Leerlos.
+
+## Frontend
+En el Frontend se muestran:
+- Operaciones de las PyMEs: consulta a la vista 'VW_Operaciones_Pymes' (GET /api/Operaciones).
+- Registrar tasa de interés: ejecuta el procedimiento almacenado 'SP_RegistrarTasaConValidacion' (POST /api/Tasas).
+- Garantías: listado y alta (GET y POST /api/Garantias).
+- Disponibilidad de garantías: listado y alta (GET y POST /api/GarantiasDisponibilidad).
+- Auditoría de operaciones: listado de la tabla que completa el trigger (GET /api/OperacionesAuditoria). 
