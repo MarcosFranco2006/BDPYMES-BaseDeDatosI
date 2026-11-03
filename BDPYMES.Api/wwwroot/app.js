@@ -1,10 +1,3 @@
-// Panel BDPYMES: HTML + CSS + JavaScript sin frameworks.
-//  - GET  api/Operaciones -> muestra los datos de la vista VW_Operaciones_Pymes
-//  - POST api/Tasas       -> ejecuta el stored procedure SP_RegistrarTasaConValidacion
-
-// Si la página se sirve desde la propia API (http://localhost:5089) usamos una
-// ruta relativa; si se abre con Live Server (puerto 5500) o como archivo,
-// apuntamos directo a la API.
 const API_EXTERNA = "http://localhost:5089/api/";
 const PUERTOS_FRONT = ["5500", "5501", "5502"];
 const API_URL = (location.protocol === "file:" || PUERTOS_FRONT.includes(location.port))
@@ -29,7 +22,6 @@ let operaciones = [];
 let temporizadorAviso;
 
 // ---------- Utilidades ----------
-// ASP.NET devuelve las propiedades en camelCase; buscamos sin distinguir mayúsculas.
 function valorDe(objeto, nombre) {
     const clave = Object.keys(objeto).find(k => k.toLowerCase() === nombre.toLowerCase());
     return clave === undefined ? undefined : objeto[clave];
@@ -37,7 +29,6 @@ function valorDe(objeto, nombre) {
 
 function formatearMonto(valor) {
     const numero = Number(valor);
-    // Si el monto no es un número (por ejemplo, viene en hexadecimal) lo mostramos tal cual.
     if (valor === "" || valor === undefined || valor === null || !Number.isFinite(numero) || String(valor).startsWith("0x")) {
         return valor || "—";
     }
@@ -64,8 +55,6 @@ function marcarConexion(conectada) {
     conexion.textContent = conectada ? "API conectada" : "API sin conexión";
 }
 
-// Un único lugar para hablar con la API. Si el servidor no responde, fetch lanza
-// "Failed to fetch": lo convertimos en un mensaje que se entienda.
 async function pedir(ruta, opciones) {
     let respuesta;
     try {
@@ -105,7 +94,7 @@ async function cargar() {
 
 function celda(texto, clase = "") {
     const td = document.createElement("td");
-    td.textContent = texto;       
+    td.textContent = texto;
     if (clase) td.className = clase;
     return td;
 }
