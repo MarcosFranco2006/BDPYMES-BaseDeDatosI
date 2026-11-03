@@ -3,8 +3,19 @@
 Para el proyecto simulamos discos duros externos en la carpeta C:\BDD-PYME . Los cuales son:
 - C:\BDD-PYME\SSD(A) : Para BDD-PYME.mdf (Archivo maestro)
 - C:\BDD-PYME\SSD(B) : Para BDD-PYME.ldf (Archivo de log)
-- C:\BDD-PYME\RAID5(I) : Para TB01.ndf (Tablas con temperatura baja: PYMES, ALYCs, SGRs, BROKERS, INSTRUMENTOS)
-- C:\BDD-PYME\RAID5(J) : Para TB02.ndf (Tablas con temperatura baja: PYMES, ALYCs, SGRs, BROKERS, INSTRUMENTOS)
+- C:\BDD-PYME\RAID5(I) : Para TB01.ndf (Tablas con temperatura baja (6): PYMES, ALYCs, SGRs, BROKERS, INSTRUMENTOS, GARANTIAS)
+- C:\BDD-PYME\RAID5(J) : Para TB02.ndf (Tablas con temperatura baja (6): PYMES, ALYCs, SGRs, BROKERS, INSTRUMENTOS, GARANTIAS)
+- C:\BDD-PYME\RAID5(E) : Para TM01.ndf (Tablas con temperatura media (4): TAZA-DE-INTERES, GARANTIAS/ALYCs, GARANTIASDISPONIBLIDAD, BROKER/COMISIONES)
+- C:\BDD-PYME\RAID5(F) : Para TM02.ndf (Tablas con temperatura media (4): TAZA-DE-INTERES, GARANTIAS/ALYCs, GARANTIASDISPONIBLIDAD, BROKER/COMISIONES)
+- C:\BDD-PYME\SSD(G) : Para TA01.ndf (Tablas con temperatura alta (2): OPERACIONES, OPERACIONES_AUDITORIA)
+- C:\BDD-PYME\SSD(H) : Para TA02.ndf (Tablas con temperatura alta (2): OPERACIONES, OPERACIONES_AUDITORIA)
+
+
+El criterio que utlizamos para dividir los archivos es:
+- Tablas con una sola clave primaria : Temperatura Baja.
+- Tablas con clave compuesta: Temperatura Media.
+- Tablas de Operaciones: Temperatura Alta.
+
 
 # Modelo de datos: Financiamiento de PyMEs
 
