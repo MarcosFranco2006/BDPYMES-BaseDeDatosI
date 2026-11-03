@@ -1,5 +1,3 @@
--- Datos de prueba para BDD-PYME (ejecutar DESPUÉS del script que crea la base).
--- Sirven para ver algo en la vista y para poder registrar tasas con el SP.
 USE [BDD-PYME];
 GO
 
@@ -17,7 +15,6 @@ INSERT INTO INSTRUMENTOS ([ID-INSTRUMENTO], TipoInstrumento) VALUES
 
 INSERT INTO SGRs ([ID-SGR], [Nombre-SGR]) VALUES (1, 'SGR Uno'), (2, 'SGR Dos');
 
--- MontoOperacion es varbinary: se guarda con CONVERT(varbinary(50), numero).
 INSERT INTO OPERACIONES
     ([ID-OPERACION], [CUIT-PYME], [ID-ALYC], [ID-BROKER], [ID-INSTRUMENTO], [ID-SGR], Estado, MontoOperacion)
 VALUES
@@ -25,6 +22,5 @@ VALUES
     (2, 302345678, 2, 2, 2, 2, 'Pendiente', CONVERT(varbinary(50), 320000));
 GO
 
--- Comprobar:
 SELECT * FROM VW_Operaciones_Pymes;
 
