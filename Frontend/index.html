@@ -79,6 +79,43 @@
             </div>
             <p id="vacio" class="vacio" hidden>No hay operaciones para mostrar.</p>
         </section>
+        <section class="tarjeta">
+            <h2>Garantías</h2>
+            <p class="nota">Alta y listado de la tabla <code>GARANTIAS</code>.</p>
+
+            <form id="form-garantia" novalidate>
+                <div class="campo">
+                    <label for="g-cuit">CUIT de la PyME</label>
+                    <input id="g-cuit" type="number" min="1" step="1" placeholder="Ej: 301234567" required>
+                </div>
+                <div class="campo">
+                    <label for="g-desc">Descripción</label>
+                    <input id="g-desc" type="text" maxlength="50" placeholder="Ej: Hipoteca galpón" required>
+                </div>
+                <div class="campo">
+                    <label for="g-monto">Monto</label>
+                    <input id="g-monto" type="number" min="0.01" step="0.01" placeholder="Ej: 500000" required>
+                </div>
+                <div class="campo">
+                    <button type="submit" id="g-guardar">Registrar garantía</button>
+                </div>
+            </form>
+
+            <div class="tabla-wrap" style="margin-top:16px">
+                <table class="tabla">
+                    <thead>
+                        <tr>
+                            <th class="num">ID</th>
+                            <th class="num">CUIT PyME</th>
+                            <th>Descripción</th>
+                            <th class="num">Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-garantias"></tbody>
+                </table>
+            </div>
+            <p id="vacio-garantias" class="vacio" hidden>No hay garantías cargadas.</p>
+        </section>
     </main>
 
     <div id="aviso" class="aviso" role="status" aria-live="polite"></div>

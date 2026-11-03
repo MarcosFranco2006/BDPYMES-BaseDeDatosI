@@ -175,3 +175,73 @@ botonRecargar.addEventListener("click", cargar);
 
 // Primera carga al abrir la página.
 cargar();
+
+// ---------- Garantías (GET y POST a /api/Garantias) ----------
+const formGarantia = document.getElementById("form-garantia");
+const campoCuit = document.getElementById("g-cuit");
+const campoDesc = document.getElementById("g-desc");
+const campoMonto = document.getElementById("g-monto");
+const botonGarantia = document.getElementById("g-guardar");
+const cuerpoGarantias = document.getElementById("cuerpo-garantias");
+const vacioGarantias = document.getElementById("vacio-garantias");
+
+async function cargarGarantias() {
+    let garantias = [];
+    try {
+        garantias = await pedir("Garantias");
+    } catch (error) {
+        mostrarAviso(error.message, "error");
+    }
+
+    cuerpoGarantias.innerHTML = "";
+    for (const g of garantias) {
+        const fila = document.createElement("tr");
+        fila.append(
+            celda(valorDe(g, "id"), "num"),
+            celda(valorDe(g, "cuitPyme"), "num"),
+            celda(valorDe(g, "descripcion") || "—"),
+            celda(formatearMonto(valorDe(g, "monto")), "num")
+        );
+        cuerpoGarantias.appendChild(fila);
+    }
+    vacioGarantias.hidden = garantias.length > 0;
+}
+
+formGarantia.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+
+    const cuitPyme = Number(campoCuit.value);
+    const descripcion = campoDesc.value.trim();
+    const monto = Number(campoMonto.value);
+
+    const cuitValido = campoCuit.value.trim() !== "" && Number.isInteger(cuitPyme) && cuitPyme > 0;
+    const descValida = descripcion.length > 0 && descripcion.length <= 50;
+    const montoValido = campoMonto.value.trim() !== "" && Number.isFinite(monto) && monto > 0;
+
+    campoCuit.classList.toggle("invalido", !cuitValido);
+    campoDesc.classList.toggle("invalido", !descValida);
+    campoMonto.classList.toggle("invalido", !montoValido);
+
+    if (!cuitValido || !descValida || !montoValido) {
+        mostrarAviso("Revisá los datos: CUIT numérico, descripción de hasta 50 caracteres y monto mayor a 0.", "error");
+        return;
+    }
+
+    botonGarantia.disabled = true;
+    try {
+        await pedir("Garantias", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ cuitPyme, descripcion, monto })
+        });
+        formGarantia.reset();
+        mostrarAviso("Garantía registrada correctamente.", "ok");
+        cargarGarantias();
+    } catch (error) {
+        mostrarAviso(error.message, "error");
+    } finally {
+        botonGarantia.disabled = false;
+    }
+});
+
+cargarGarantias();
