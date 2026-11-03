@@ -176,7 +176,6 @@ botonRecargar.addEventListener("click", cargar);
 // Primera carga al abrir la página.
 cargar();
 
-// ---------- Garantías, disponibilidad y auditoría ----------
 
 // ── Garantías ──
 async function cargarGarantias() {
