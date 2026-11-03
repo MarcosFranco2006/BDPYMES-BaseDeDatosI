@@ -11,7 +11,7 @@ INSERT INTO BROKERS ([ID-BROKER], NombreBroker) VALUES (1, 'Broker Uno'), (2, 'B
 
 INSERT INTO INSTRUMENTOS ([ID-INSTRUMENTO], TipoInstrumento) VALUES
     (1, 'Cheque de pago diferido'),
-    (2, 'Pagare');
+    (2, 'Caucion');
 
 INSERT INTO SGRs ([ID-SGR], [Nombre-SGR]) VALUES (1, 'SGR Uno'), (2, 'SGR Dos');
 
