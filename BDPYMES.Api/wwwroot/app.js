@@ -105,7 +105,7 @@ async function cargar() {
 
 function celda(texto, clase = "") {
     const td = document.createElement("td");
-    td.textContent = texto;       // textContent evita inyectar HTML desde los datos
+    td.textContent = texto;       
     if (clase) td.className = clase;
     return td;
 }

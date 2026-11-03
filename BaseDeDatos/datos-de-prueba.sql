@@ -18,8 +18,8 @@ INSERT INTO SGRs ([ID-SGR], [Nombre-SGR]) VALUES (1, 'SGR Uno'), (2, 'SGR Dos');
 INSERT INTO OPERACIONES
     ([ID-OPERACION], [CUIT-PYME], [ID-ALYC], [ID-BROKER], [ID-INSTRUMENTO], [ID-SGR], Estado, MontoOperacion)
 VALUES
-    (1, 301234567, 1, 1, 1, 1, 'Aprobada',  CONVERT(varbinary(50), 150000)),
-    (2, 302345678, 2, 2, 2, 2, 'Pendiente', CONVERT(varbinary(50), 320000));
+    (1, 301234567, 1, 1, 1, 1, 'Aprobada',   150000),
+    (2, 302345678, 2, 2, 2, 2, 'Pendiente',  320000);
 GO
 
 SELECT * FROM VW_Operaciones_Pymes;

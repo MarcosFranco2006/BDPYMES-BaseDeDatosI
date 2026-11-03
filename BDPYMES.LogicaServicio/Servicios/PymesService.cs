@@ -35,7 +35,7 @@ public class PymesService
                     IdOperacion = reader.GetInt32(0),
                     CuitPyme = reader.GetInt32(1),
                     RazonSocial = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
-                    MontoOperacion = reader.IsDBNull(3) ? string.Empty : ConvertirMonto((byte[])reader.GetValue(3)),
+                    MontoOperacion = reader.IsDBNull(3) ? 0.0m : reader.GetDecimal(3),
                     Estado = reader.IsDBNull(4) ? string.Empty : reader.GetString(4)
                 });
             }
@@ -83,17 +83,6 @@ public class PymesService
         {
             throw new Exception($"Error al registrar la tasa: {ex.Message}", ex);
         }
-    }
-
-    private static string ConvertirMonto(byte[] bytes)
-    {
-        if (bytes.Length == 4)
-            return BinaryPrimitives.ReadInt32BigEndian(bytes).ToString();
-
-        if (bytes.Length == 8)
-            return BinaryPrimitives.ReadInt64BigEndian(bytes).ToString();
-
-        return "0x" + Convert.ToHexString(bytes);
     }
 
     // MÉTODOS GET Y POST PARA PROBAR CON SWAGGER
