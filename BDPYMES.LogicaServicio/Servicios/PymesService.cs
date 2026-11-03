@@ -678,4 +678,84 @@ public class PymesService
         }
         return brokerComisiones;
     }
+
+    public GarantiaDisponibilidad InsertarDatoGarantiaDisponibilidad(GarantiaDisponibilidad disponibilidad)
+    {
+        if (disponibilidad.FechaHasta <= disponibilidad.FechaDesde)
+            throw new ArgumentException("La fecha hasta tiene que ser posterior a la fecha desde.");
+ 
+        bool existeGarantia = ConsultarDatosGarantias().Any(g => g.Id == disponibilidad.IdGarantia);
+        if (!existeGarantia)
+            throw new ArgumentException($"No existe una garantía con el ID {disponibilidad.IdGarantia}.");
+ 
+        bool existeOperacion = ConsultarOperaciones().Any(o => o.IdOperacion == disponibilidad.IdOperacion);
+        if (!existeOperacion)
+            throw new ArgumentException($"No existe una operación con el ID {disponibilidad.IdOperacion}.");
+ 
+        string query = "INSERT INTO GARANTIASDISPONIBLIDAD ([ID-GARANTIA], FechaDesde, FechaHasta, [ID-OPERACION]) " +
+                       "VALUES (@IdGarantia, @FechaDesde, @FechaHasta, @IdOperacion)";
+ 
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.Add("@IdGarantia", SqlDbType.Int).Value = disponibilidad.IdGarantia;
+                command.Parameters.Add("@FechaDesde", SqlDbType.DateTime2).Value = disponibilidad.FechaDesde;
+                command.Parameters.Add("@FechaHasta", SqlDbType.DateTime2).Value = disponibilidad.FechaHasta;
+                command.Parameters.Add("@IdOperacion", SqlDbType.Int).Value = disponibilidad.IdOperacion;
+ 
+                try
+                {
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                }
+                catch (SqlException ex) when (ex.Number == 2627)
+                {
+                    throw new ArgumentException("Ya existe esa garantía con esas mismas fechas.");
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error al insertar: {ex.Message}");
+                }
+            }
+        }
+        return disponibilidad;
+    }
+ 
+    public List<GarantiaDisponibilidad> ConsultarDatosGarantiasDisponibilidad()
+    {
+        List<GarantiaDisponibilidad> lista = new List<GarantiaDisponibilidad>();
+        string query = "SELECT [ID-GARANTIA], FechaDesde, FechaHasta, [ID-OPERACION] FROM GARANTIASDISPONIBLIDAD";
+ 
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    connection.Open();
+ 
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            lista.Add(new GarantiaDisponibilidad
+                            {
+                                IdGarantia = reader.GetInt32(0),
+                                FechaDesde = reader.GetDateTime(1),
+                                FechaHasta = reader.GetDateTime(2),
+                                IdOperacion = reader.GetInt32(3)
+                            });
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error al consultar: {ex.Message}");
+                }
+            }
+        }
+        return lista;
+    }
+
 }
