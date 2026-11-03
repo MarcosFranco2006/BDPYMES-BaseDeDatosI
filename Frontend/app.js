@@ -175,3 +175,158 @@ botonRecargar.addEventListener("click", cargar);
 
 // Primera carga al abrir la página.
 cargar();
+
+
+// ── Garantías ──
+async function cargarGarantias() {
+    const estado = document.getElementById("estado-garantias");
+
+    try {
+        const response = await fetch(API_URL + "Garantias");
+        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+
+        const garantias = await response.json();
+
+        document.getElementById("cuerpo-garantias").innerHTML = garantias.map(g => `
+            <tr>
+                <td class="num">${g.id}</td>
+                <td class="num">${g.cuitPyme}</td>
+                <td>${g.descripcion}</td>
+                <td class="num">$${g.monto.toLocaleString("es-AR")}</td>
+            </tr>
+        `).join("");
+
+        estado.textContent = garantias.length === 0 ? "No hay garantías cargadas." : "";
+    } catch (error) {
+        estado.textContent = "No se pudieron cargar las garantías. Verificá que la API esté corriendo.";
+        console.error(error);
+    }
+}
+
+async function crearGarantia(nueva) {
+    const response = await fetch(API_URL + "Garantias", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nueva),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detalle || `Error HTTP: ${response.status}`);
+    }
+    return response.json();
+}
+
+// ── Disponibilidad de garantías ──
+async function cargarDisponibilidad() {
+    const estado = document.getElementById("estado-disponibilidad");
+
+    try {
+        const response = await fetch(API_URL + "GarantiasDisponibilidad");
+        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+
+        const disponibilidades = await response.json();
+
+        document.getElementById("cuerpo-disponibilidad").innerHTML = disponibilidades.map(d => `
+            <tr>
+                <td class="num">${d.idGarantia}</td>
+                <td>${d.fechaDesde}</td>
+                <td>${d.fechaHasta}</td>
+                <td class="num">${d.idOperacion}</td>
+            </tr>
+        `).join("");
+
+        estado.textContent = disponibilidades.length === 0 ? "No hay disponibilidades cargadas." : "";
+    } catch (error) {
+        estado.textContent = "No se pudo cargar la disponibilidad. Verificá que la API esté corriendo.";
+        console.error(error);
+    }
+}
+
+async function crearDisponibilidad(nueva) {
+    const response = await fetch(API_URL + "GarantiasDisponibilidad", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nueva),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detalle || `Error HTTP: ${response.status}`);
+    }
+    return response.json();
+}
+
+// ── Auditoría de operaciones (solo lectura: la completa el trigger) ──
+async function cargarAuditoria() {
+    const estado = document.getElementById("estado-auditoria");
+
+    try {
+        const response = await fetch(API_URL + "OperacionesAuditoria");
+        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+
+        const registros = await response.json();
+
+        document.getElementById("cuerpo-auditoria").innerHTML = registros.map(r => `
+            <tr>
+                <td class="num">${r.idOperacion}</td>
+                <td>${r.fechaOperacion}</td>
+                <td class="num">$${r.montoOperacion.toLocaleString("es-AR")}</td>
+                <td>${r.tipoAccion}</td>
+            </tr>
+        `).join("");
+
+        estado.textContent = registros.length === 0 ? "No hay registros de auditoría." : "";
+    } catch (error) {
+        estado.textContent = "No se pudo cargar la auditoría. Verificá que la API esté corriendo.";
+        console.error(error);
+    }
+}
+
+// ── Carga inicial y eventos ──
+document.addEventListener("DOMContentLoaded", () => {
+    cargarGarantias();
+    cargarDisponibilidad();
+    cargarAuditoria();
+
+    document.getElementById("recargar-auditoria").addEventListener("click", cargarAuditoria);
+
+    document.getElementById("form-garantia").addEventListener("submit", async (event) => {
+        event.preventDefault(); // el navegador ya validó required/min/minlength
+
+        const nueva = {
+            cuitPyme: parseInt(document.getElementById("g-cuit").value),
+            descripcion: document.getElementById("g-desc").value.trim(),
+            monto: parseFloat(document.getElementById("g-monto").value),
+        };
+
+        try {
+            await crearGarantia(nueva);
+            event.target.reset();
+            mostrarAviso("Garantía registrada correctamente.", "ok");
+            await cargarGarantias();
+        } catch (error) {
+            mostrarAviso(error.message, "error");
+        }
+    });
+
+    document.getElementById("form-disponibilidad").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const nueva = {
+            idGarantia: parseInt(document.getElementById("d-garantia").value),
+            fechaDesde: document.getElementById("d-desde").value,
+            fechaHasta: document.getElementById("d-hasta").value,
+            idOperacion: parseInt(document.getElementById("d-operacion").value),
+        };
+
+        try {
+            await crearDisponibilidad(nueva);
+            event.target.reset();
+            mostrarAviso("Disponibilidad registrada correctamente.", "ok");
+            await cargarDisponibilidad();
+        } catch (error) {
+            mostrarAviso(error.message, "error");
+        }
+    });
+});

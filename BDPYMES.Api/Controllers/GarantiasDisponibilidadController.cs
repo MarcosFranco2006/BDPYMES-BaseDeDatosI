@@ -44,8 +44,7 @@ public class GarantiasDisponibilidadController : ControllerBase
 
             _servicio.InsertarDatoGarantiaDisponibilidad(disponibilidad);
 
-            return StatusCode(201, disponibilidad.AGarantiaDisponibilidadResponse());
-        }
+            return Created("", disponibilidad.AGarantiaDisponibilidadResponse());        }
         catch (ArgumentException ex)
         {
             return StatusCode(400, new { mensaje = "Dato mal brindado", detalle = ex.Message });
