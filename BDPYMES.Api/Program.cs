@@ -3,7 +3,6 @@ using BDPYMES.LogicaServicio.Servicios;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// La cadena de conexión se lee de appsettings.json (sección ConnectionStrings).
 string connectionString = builder.Configuration.GetConnectionString("BddPyme")
     ?? throw new InvalidOperationException("Falta la cadena de conexión 'BddPyme' en appsettings.json.");
 
@@ -12,8 +11,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
-// CORS: deja que el navegador acepte respuestas de la API cuando el front se
-// abre desde otro origen (por ejemplo Live Server en el puerto 5500).
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermitirFrontend", policy =>
@@ -34,8 +31,6 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    // En desarrollo NO se redirige a https: esa redirección hace que el
-    // navegador bloquee los fetch del front con "Failed to fetch".
     app.UseHttpsRedirection();
 }
 
