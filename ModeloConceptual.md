@@ -1,3 +1,11 @@
+# Archivos Físicos:
+
+Para el proyecto simulamos discos duros externos en la carpeta C:\BDD-PYME . Los cuales son:
+- C:\BDD-PYME\SSD(A) : Para BDD-PYME.mdf (Archivo maestro)
+- C:\BDD-PYME\SSD(B) : Para BDD-PYME.ldf (Archivo de log)
+- C:\BDD-PYME\RAID5(I) : Para TB01.ndf (Tablas con temperatura baja: PYMES, ALYCs, SGRs, BROKERS, INSTRUMENTOS)
+- C:\BDD-PYME\RAID5(J) : Para TB02.ndf (Tablas con temperatura baja: PYMES, ALYCs, SGRs, BROKERS, INSTRUMENTOS)
+
 # Modelo de datos: Financiamiento de PyMEs
 
 Este documento explica los actores, los instrumentos y las reglas de negocio del sistema de un Broker que intermedia el financiamiento de PyMEs en el mercado de capitales.
