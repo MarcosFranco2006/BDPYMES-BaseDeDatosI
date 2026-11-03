@@ -684,12 +684,14 @@ public class PymesService
         if (disponibilidad.FechaHasta <= disponibilidad.FechaDesde)
             throw new ArgumentException("La fecha hasta tiene que ser posterior a la fecha desde.");
  
-        bool existeGarantia = ConsultarDatosGarantias().Any(g => g.Id == disponibilidad.IdGarantia);
-        if (!existeGarantia)
+        List<Garantia> garantias = ConsultarDatosGarantias();
+        int cantidadGarantias = garantias.Count(g => g.Id == disponibilidad.IdGarantia);
+        if (cantidadGarantias == 0)
             throw new ArgumentException($"No existe una garantía con el ID {disponibilidad.IdGarantia}.");
  
-        bool existeOperacion = ConsultarOperaciones().Any(o => o.IdOperacion == disponibilidad.IdOperacion);
-        if (!existeOperacion)
+        List<OperacionPyme> operaciones = ConsultarOperaciones();
+        int cantidadOperaciones = operaciones.Count(o => o.IdOperacion == disponibilidad.IdOperacion);
+        if (cantidadOperaciones == 0)
             throw new ArgumentException($"No existe una operación con el ID {disponibilidad.IdOperacion}.");
  
         string query = "INSERT INTO GARANTIASDISPONIBLIDAD ([ID-GARANTIA], FechaDesde, FechaHasta, [ID-OPERACION]) " +
@@ -700,8 +702,8 @@ public class PymesService
             using (SqlCommand command = new SqlCommand(query, connection))
             {
                 command.Parameters.Add("@IdGarantia", SqlDbType.Int).Value = disponibilidad.IdGarantia;
-                command.Parameters.Add("@FechaDesde", SqlDbType.DateTime2).Value = disponibilidad.FechaDesde;
-                command.Parameters.Add("@FechaHasta", SqlDbType.DateTime2).Value = disponibilidad.FechaHasta;
+                command.Parameters.Add("@FechaDesde", SqlDbType.DateTime).Value = disponibilidad.FechaDesde;
+                command.Parameters.Add("@FechaHasta", SqlDbType.DateTime).Value = disponibilidad.FechaHasta;
                 command.Parameters.Add("@IdOperacion", SqlDbType.Int).Value = disponibilidad.IdOperacion;
  
                 try
@@ -709,9 +711,13 @@ public class PymesService
                     connection.Open();
                     command.ExecuteNonQuery();
                 }
-                catch (SqlException ex) when (ex.Number == 2627)
+                catch (SqlException ex)
                 {
-                    throw new ArgumentException("Ya existe esa garantía con esas mismas fechas.");
+                    // 2627 es el número de error de SQL Server para clave duplicada
+                    if (ex.Number == 2627)
+                        throw new ArgumentException("Ya existe esa garantía con esas mismas fechas.");
+ 
+                    throw new Exception($"Error al insertar: {ex.Message}");
                 }
                 catch (Exception ex)
                 {
@@ -724,7 +730,7 @@ public class PymesService
  
     public List<GarantiaDisponibilidad> ConsultarDatosGarantiasDisponibilidad()
     {
-        List<GarantiaDisponibilidad> lista = new List<GarantiaDisponibilidad>();
+        List<GarantiaDisponibilidad> disponibilidades = new List<GarantiaDisponibilidad>();
         string query = "SELECT [ID-GARANTIA], FechaDesde, FechaHasta, [ID-OPERACION] FROM GARANTIASDISPONIBLIDAD";
  
         using (SqlConnection connection = new SqlConnection(connectionString))
@@ -739,13 +745,15 @@ public class PymesService
                     {
                         while (reader.Read())
                         {
-                            lista.Add(new GarantiaDisponibilidad
+                            GarantiaDisponibilidad nuevaDisponibilidad = new GarantiaDisponibilidad
                             {
                                 IdGarantia = reader.GetInt32(0),
                                 FechaDesde = reader.GetDateTime(1),
                                 FechaHasta = reader.GetDateTime(2),
                                 IdOperacion = reader.GetInt32(3)
-                            });
+                            };
+ 
+                            disponibilidades.Add(nuevaDisponibilidad);
                         }
                     }
                 }
@@ -755,7 +763,98 @@ public class PymesService
                 }
             }
         }
-        return lista;
+        return disponibilidades;
+    }
+
+    public OperacionAuditoria InsertarDatoOperacionAuditoria(OperacionAuditoria operacionAuditoria)
+    {
+        if (operacionAuditoria == null)
+            throw new ArgumentNullException(nameof(operacionAuditoria));
+ 
+        List<OperacionPyme> operaciones = ConsultarOperaciones();
+        int cantidadOperaciones = operaciones.Count(o => o.IdOperacion == operacionAuditoria.IdOperacion);
+        if (cantidadOperaciones == 0)
+            throw new ArgumentException($"No existe una operación con el ID {operacionAuditoria.IdOperacion}.");
+ 
+        if (operacionAuditoria.MontoOperacion <= 0)
+            throw new ArgumentException("El monto de la operación debe ser mayor a 0.");
+ 
+        if (string.IsNullOrWhiteSpace(operacionAuditoria.TipoAccion))
+            throw new ArgumentException("El tipo de acción no puede estar vacío.");
+ 
+        if (operacionAuditoria.TipoAccion.Length > 50)
+            throw new ArgumentException("El tipo de acción no puede superar los 50 caracteres.");
+ 
+        operacionAuditoria.FechaOperacion = DateTime.Now;
+ 
+        string query = "INSERT INTO OPERACIONES_AUDITORIA ([ID-OPERACION], FechaOperacion, MontoOperacion, TipoAccion) VALUES (@IdOperacion, @FechaOperacion, @MontoOperacion, @TipoAccion)";
+ 
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.Add("@IdOperacion", SqlDbType.Int).Value = operacionAuditoria.IdOperacion;
+                command.Parameters.Add("@FechaOperacion", SqlDbType.DateTime).Value = operacionAuditoria.FechaOperacion;
+                command.Parameters.Add("@MontoOperacion", SqlDbType.Money).Value = operacionAuditoria.MontoOperacion;
+                command.Parameters.Add("@TipoAccion", SqlDbType.VarChar, 50).Value = operacionAuditoria.TipoAccion;
+ 
+                try
+                {
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error al insertar: {ex.Message}");
+                }
+            }
+        }
+        return operacionAuditoria;
+    }
+ 
+    public List<OperacionAuditoria> ConsultarDatosOperacionesAuditoria()
+    {
+        List<OperacionAuditoria> operacionesAuditoria = new List<OperacionAuditoria>();
+        string query = "SELECT [ID-OPERACION], FechaOperacion, MontoOperacion, TipoAccion FROM OPERACIONES_AUDITORIA";
+ 
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    connection.Open();
+ 
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            OperacionAuditoria nuevaOperacionAuditoria = new OperacionAuditoria();
+ 
+                            // Las columnas de esta tabla aceptan NULL, por eso se verifica cada una
+                            if (!reader.IsDBNull(0))
+                                nuevaOperacionAuditoria.IdOperacion = reader.GetInt32(0);
+ 
+                            if (!reader.IsDBNull(1))
+                                nuevaOperacionAuditoria.FechaOperacion = reader.GetDateTime(1);
+ 
+                            if (!reader.IsDBNull(2))
+                                nuevaOperacionAuditoria.MontoOperacion = reader.GetDecimal(2);
+ 
+                            if (!reader.IsDBNull(3))
+                                nuevaOperacionAuditoria.TipoAccion = reader.GetString(3);
+ 
+                            operacionesAuditoria.Add(nuevaOperacionAuditoria);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error al consultar: {ex.Message}");
+                }
+            }
+        }
+        return operacionesAuditoria;
     }
 
 }
