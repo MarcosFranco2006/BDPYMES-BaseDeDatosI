@@ -7,23 +7,11 @@ using Microsoft.Data.SqlClient;
 
 namespace BDPYMES.LogicaServicio.Servicios;
 
-// Acceso a la base BDD-PYME con ADO.NET (Microsoft.Data.SqlClient).
-// Hace solo dos cosas, las que pide la cátedra:
-//   1) leer una VISTA            -> VW_Operaciones_Pymes
-//   2) llamar a un STORED PROC   -> SP_RegistrarTasaConValidacion
 public class PymesService
 {
-    private readonly string _connectionString;
+    private readonly string connectionString = "Server=.;Database=BDD-PYME;Integrated Security=true;TrustServerCertificate=true;";
 
-    // La cadena de conexión viene de appsettings.json (ver Program.cs).
-    public PymesService(string connectionString)
-    {
-        _connectionString = connectionString;
-    }
-
-    public string connectionString = "Server=.;Database=BDD-PYME;Integrated Security=true;TrustServerCertificate=true;";
-
-    // ---------- VISTA ----------
+    // VISTA
     public List<OperacionPyme> ConsultarOperaciones()
     {
         List<OperacionPyme> operaciones = new List<OperacionPyme>();
@@ -34,7 +22,7 @@ public class PymesService
 
         try
         {
-            using SqlConnection connection = new SqlConnection(_connectionString);
+            using SqlConnection connection = new SqlConnection(connectionString);
             using SqlCommand command = new SqlCommand(query, connection);
 
             connection.Open();
@@ -47,7 +35,6 @@ public class PymesService
                     IdOperacion = reader.GetInt32(0),
                     CuitPyme = reader.GetInt32(1),
                     RazonSocial = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
-                    // MontoOperacion es varbinary en la base: llega como byte[].
                     MontoOperacion = reader.IsDBNull(3) ? string.Empty : ConvertirMonto((byte[])reader.GetValue(3)),
                     Estado = reader.IsDBNull(4) ? string.Empty : reader.GetString(4)
                 });
@@ -61,19 +48,18 @@ public class PymesService
         return operaciones;
     }
 
-    // ---------- STORED PROCEDURE ----------
+    // PROCEDIMIENTO ALMACENADO
     public void RegistrarTasa(int idInstrumento, decimal tasaInteres)
     {
         if (idInstrumento <= 0)
             throw new ArgumentException("El ID del instrumento debe ser mayor a cero.");
 
-        // La columna TazaDeInteres es decimal(5,2): el máximo es 999,99.
-        if (tasaInteres < 0 || tasaInteres > 999.99m)
+        if (tasaInteres < 0 || tasaInteres > 999.999m)
             throw new ArgumentException("La tasa de interés debe estar entre 0 y 999,99.");
 
         try
         {
-            using SqlConnection connection = new SqlConnection(_connectionString);
+            using SqlConnection connection = new SqlConnection(connectionString);
             using SqlCommand command = new SqlCommand("SP_RegistrarTasaConValidacion", connection)
             {
                 CommandType = CommandType.StoredProcedure
@@ -81,7 +67,6 @@ public class PymesService
 
             command.Parameters.Add("@IdInstrumento", SqlDbType.Int).Value = idInstrumento;
 
-            // El SP declara @TasaInteres como DECIMAL(6,3).
             SqlParameter parametroTasa = command.Parameters.Add("@TasaInteres", SqlDbType.Decimal);
             parametroTasa.Precision = 6;
             parametroTasa.Scale = 3;
@@ -90,8 +75,6 @@ public class PymesService
             connection.Open();
             command.ExecuteNonQuery();
         }
-        // Los RAISERROR del SP (por ejemplo "El instrumento especificado no existe.")
-        // llegan con Number = 50000: son errores de datos, no de servidor.
         catch (SqlException ex) when (ex.Number == 50000)
         {
             throw new ArgumentException(ex.Message);
@@ -102,8 +85,6 @@ public class PymesService
         }
     }
 
-    // varbinary -> texto legible. Si son 4 u 8 bytes los interpretamos como un
-    // número entero (así lo guarda CONVERT(varbinary, número)); si no, hexadecimal.
     private static string ConvertirMonto(byte[] bytes)
     {
         if (bytes.Length == 4)
@@ -115,26 +96,25 @@ public class PymesService
         return "0x" + Convert.ToHexString(bytes);
     }
 
-        public Pyme InsertarDatoPyme(Pyme pyme)
-    {
-        if (!string.IsNullOrEmpty(pyme.CUIT) && pyme.CUIT.Length > 13)
-            throw new ArgumentException("El CUIT no puede superar los 13 caracteres.");
+    // MÉTODOS GET Y POST PARA PROBAR CON SWAGGER
 
-        if (!string.IsNullOrEmpty(pyme.Direccion) && pyme.Direccion.Length > 50)
+    public Pyme InsertarDatoPyme(Pyme pyme)
+    {
+        if (!string.IsNullOrEmpty(pyme.Direccion) && pyme.Direccion.Length > 32)
             throw new ArgumentException("La dirección no puede superar los 50 caracteres.");
 
-        if (!string.IsNullOrEmpty(pyme.Razon_Social) && pyme.Razon_Social.Length > 50)
-            throw new ArgumentException("La razón social no puede superar los 50 caracteres.");
+        if (!string.IsNullOrEmpty(pyme.Razon_Social) && pyme.Razon_Social.Length > 32)
+            throw new ArgumentException("La razón social no puede superar los 32 caracteres.");
 
-        string query = "INSERT INTO PYMES (CUIT, Direccion, Razon_Social) VALUES (@CUIT, @Direccion, @Razon_Social)";
+        string query = "INSERT INTO PYMES ([CUIT-PYME], Direccion, RazonSocial) VALUES (@CUIT, @Direccion, @Razon_Social)";
 
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
             using (SqlCommand command = new SqlCommand(query, connection))
             {
-                command.Parameters.Add("@CUIT", SqlDbType.VarChar, 13).Value = (object)pyme.CUIT;
-                command.Parameters.Add("@Direccion", SqlDbType.VarChar, 50).Value = (object)pyme.Direccion ?? DBNull.Value;
-                command.Parameters.Add("@Razon_Social", SqlDbType.VarChar, 50).Value = (object)pyme.Razon_Social ?? DBNull.Value;
+                command.Parameters.Add("@CUIT", SqlDbType.Int).Value = (object)pyme.CUIT;
+                command.Parameters.Add("@Direccion", SqlDbType.VarChar, 32).Value = (object)pyme.Direccion ?? DBNull.Value;
+                command.Parameters.Add("@Razon_Social", SqlDbType.VarChar, 32).Value = (object)pyme.Razon_Social ?? DBNull.Value;
 
                 try
                 {
@@ -153,7 +133,7 @@ public class PymesService
     public List<Pyme> ConsultarDatosPymes()
     {
         List<Pyme> pymes = new List<Pyme>();
-        string query = "SELECT CUIT, Direccion, Razon_Social FROM PYMES";
+        string query = "SELECT [CUIT-PYME], Direccion, RazonSocial FROM PYMES";
 
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
@@ -167,7 +147,7 @@ public class PymesService
                     {
                         while (reader.Read())
                         {
-                            string cuit = reader.IsDBNull(0) ? string.Empty : reader.GetString(0);
+                            int cuit = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
                             string direccion = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
                             string razonSocial = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
 
@@ -200,14 +180,14 @@ public class PymesService
 
         alyc.Id = alycs.Count > 0 ? alycs.Max(x => x.Id) + 1 : 1;
 
-        string query = "INSERT INTO ALYCS (ID, Nombre) VALUES (@ID, @Nombre)";
+        string query = "INSERT INTO ALYCS ([ID-ALYCS], NombreALYC) VALUES (@ID, @Nombre)";
 
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
             using (SqlCommand command = new SqlCommand(query, connection))
             {
                 command.Parameters.Add("@ID", SqlDbType.Int).Value = (object)alyc.Id;
-                command.Parameters.Add("@Nombre", SqlDbType.VarChar, 50).Value = (object)alyc.Nombre ?? DBNull.Value;
+                command.Parameters.Add("@Nombre", SqlDbType.VarChar, 32).Value = (object)alyc.Nombre ?? DBNull.Value;
                 try
                 {
                     connection.Open();
@@ -225,7 +205,7 @@ public class PymesService
     public List<Alyc> ConsultarDatosAlycs()
     {
         List<Alyc> alycs = new List<Alyc>();
-        string query = "SELECT ID, Nombre FROM ALYCS";
+        string query = "SELECT [ID-ALYCS], NombreALYC FROM ALYCS";
 
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
@@ -239,7 +219,6 @@ public class PymesService
                     {
                         while (reader.Read())
                         {
-                            // Es buena práctica validar si la columna viene NULL de la base de datos
                             int id = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
                             string nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
 
@@ -266,19 +245,19 @@ public class PymesService
     {
         List<Broker> brokers = ConsultarDatosBrokers();
 
-        if (!string.IsNullOrEmpty(broker.Nombre) && broker.Nombre.Length > 50)
-            throw new ArgumentException("El nombre no puede superar los 50 caracteres.");
+        if (!string.IsNullOrEmpty(broker.Nombre) && broker.Nombre.Length > 32)
+            throw new ArgumentException("El nombre no puede superar los 32 caracteres.");
 
         broker.Id = brokers.Count > 0 ? brokers.Max(x => x.Id) + 1 : 1;
 
-        string query = "INSERT INTO BROKERS (ID, Nombre) VALUES (@ID, @Nombre)";
+        string query = "INSERT INTO BROKERS ([ID-BROKER], NombreBroker) VALUES (@ID, @Nombre)";
 
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
             using (SqlCommand command = new SqlCommand(query, connection))
             {
                 command.Parameters.Add("@ID", SqlDbType.Int).Value = (object)broker.Id;
-                command.Parameters.Add("@Nombre", SqlDbType.VarChar, 50).Value = (object)broker.Nombre ?? DBNull.Value;
+                command.Parameters.Add("@Nombre", SqlDbType.VarChar, 32).Value = (object)broker.Nombre ?? DBNull.Value;
                 try
                 {
                     connection.Open();
@@ -296,7 +275,7 @@ public class PymesService
     public List<Broker> ConsultarDatosBrokers()
     {
         List<Broker> brokers = new List<Broker>();
-        string query = "SELECT ID, Nombre FROM BROKERS";
+        string query = "SELECT [ID-BROKER], NombreBroker FROM BROKERS";
 
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
@@ -337,9 +316,6 @@ public class PymesService
         List<Garantia> garantias = ConsultarDatosGarantias();
         List<Pyme> pymes = ConsultarDatosPymes();
 
-        if (!string.IsNullOrEmpty(garantia.CuitPyme) && garantia.CuitPyme.Length > 13)
-            throw new ArgumentException("El CUIT de la Pyme no puede superar los 13 caracteres.");
-
         bool existePyme = pymes.Any(p => p.CUIT == garantia.CuitPyme);
         if (!existePyme)
             throw new ArgumentException($"No existe una Pyme cargada con el CUIT {garantia.CuitPyme}.");
@@ -352,15 +328,15 @@ public class PymesService
 
         garantia.Id = garantias.Count > 0 ? garantias.Max(x => x.Id) + 1 : 1;
 
-        string query = "INSERT INTO GARANTIAS (ID, CUIT_PYME, Descripcion, Monto) VALUES (@ID, @CUIT_PYME, @Descripcion, @Monto)";
+        string query = "INSERT INTO GARANTIAS ([ID-GARANTIA], [CUIT-PYME], DescripcionGarantia, MontoGarantia) VALUES (@ID, @CUIT_PYME, @Descripcion, @Monto)";
 
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
             using (SqlCommand command = new SqlCommand(query, connection))
             {
                 command.Parameters.Add("@ID", SqlDbType.Int).Value = (object)garantia.Id;
-                command.Parameters.Add("@CUIT_PYME", SqlDbType.VarChar, 13).Value = (object)garantia.CuitPyme;
-                command.Parameters.Add("@Descripcion", SqlDbType.VarChar, 50).Value = (object)garantia.Descripcion ?? DBNull.Value;
+                command.Parameters.Add("@CUIT_PYME", SqlDbType.Int).Value = (object)garantia.CuitPyme;
+                command.Parameters.Add("@Descripcion", SqlDbType.VarChar, 32).Value = (object)garantia.Descripcion ?? DBNull.Value;
                 command.Parameters.Add("@Monto", SqlDbType.Money).Value = (object)garantia.Monto;
 
                 try
@@ -380,7 +356,7 @@ public class PymesService
     public List<Garantia> ConsultarDatosGarantias()
     {
         List<Garantia> garantias = new List<Garantia>();
-        string query = "SELECT ID, CUIT_PYME, Descripcion, Monto FROM GARANTIAS";
+        string query = "SELECT [ID-GARANTIA],  [CUIT-PYME], DescripcionGarantia, MontoGarantia FROM GARANTIAS";
 
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
@@ -395,7 +371,7 @@ public class PymesService
                         while (reader.Read())
                         {
                             int id = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
-                            string cuitPyme = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
+                            int cuitPyme = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
                             string descripcion = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
                             decimal monto = reader.IsDBNull(3) ? 0.00m : reader.GetDecimal(3);
 
@@ -429,7 +405,7 @@ public class PymesService
 
         sgr.Id = sgrs.Count > 0 ? sgrs.Max(x => x.Id) + 1 : 1;
 
-        string query = "INSERT INTO SGRs (ID, Nombre) VALUES (@ID, @Nombre)";
+        string query = "INSERT INTO SGRs ([ID-SGR], [Nombre-SGR]) VALUES (@ID, @Nombre)";
 
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
@@ -454,7 +430,7 @@ public class PymesService
     public List<Sgr> ConsultarDatosSgrs()
     {
         List<Sgr> sgrs = new List<Sgr>();
-        string query = "SELECT ID, Nombre FROM SGRs";
+        string query = "SELECT [ID-SGR], [Nombre-SGR] FROM SGRs";
 
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
@@ -495,18 +471,18 @@ public class PymesService
         List<Instrumento> instrumentos = ConsultarDatosInstrumentos();
 
         if (!string.IsNullOrEmpty(instrumento.TipoInstrumento) && instrumento.TipoInstrumento.Length > 50)
-            throw new ArgumentException("El Tipo de instrumento no puede superar los 50 caracteres.");
+            throw new ArgumentException("El Tipo de instrumento no puede superar los 32 caracteres.");
 
         instrumento.Id = instrumentos.Count > 0 ? instrumentos.Max(x => x.Id) + 1 : 1;
 
-        string query = "INSERT INTO INSTRUMENTOS (ID, Tipo_Instrumento) VALUES (@ID, @Tipo_Instrumento)";
+        string query = "INSERT INTO INSTRUMENTOS ([ID-INSTRUMENTO], TipoInstrumento) VALUES (@ID, @Tipo_Instrumento)";
 
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
             using (SqlCommand command = new SqlCommand(query, connection))
             {
                 command.Parameters.Add("@ID", SqlDbType.Int).Value = (object)instrumento.Id;
-                command.Parameters.Add("@Tipo_Instrumento", SqlDbType.VarChar, 50).Value = (object)instrumento.TipoInstrumento ?? DBNull.Value;
+                command.Parameters.Add("@Tipo_Instrumento", SqlDbType.VarChar, 32).Value = (object)instrumento.TipoInstrumento ?? DBNull.Value;
                 try
                 {
                     connection.Open();
@@ -524,7 +500,7 @@ public class PymesService
     public List<Instrumento> ConsultarDatosInstrumentos()
     {
         List<Instrumento> instrumentos = new List<Instrumento>();
-        string query = "SELECT ID, Tipo_Instrumento FROM INSTRUMENTOS";
+        string query = "SELECT [ID-INSTRUMENTO], TipoInstrumento FROM INSTRUMENTOS";
 
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
@@ -569,7 +545,7 @@ public class PymesService
         if (!existeInstrumento)
             throw new ArgumentException($"No hay cargado un instrumento con el ID {tasaInteres.IdInstrumento}.");
 
-        string query = "INSERT INTO [TASAS/INTERES] (ID_INSTRUMENTO, Ultima_Actualizacion, Tasa_Interes) VALUES (@ID_INSTRUMENTO, @Ultima_Actualizacion, @Tasa_Interes)";
+        string query = "INSERT INTO [TAZA-DE-INTERES] ([ID-INSTRUMENTO], FechaUltimaActualizacion, TazaDeInteres) VALUES (@ID_INSTRUMENTO, @Ultima_Actualizacion, @Tasa_Interes)";
 
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
@@ -578,8 +554,8 @@ public class PymesService
                 command.Parameters.Add("@ID_INSTRUMENTO", SqlDbType.Int).Value = (object)tasaInteres.IdInstrumento;
                 command.Parameters.Add("@Ultima_Actualizacion", SqlDbType.DateTime).Value = DateTime.Now;
                 SqlParameter param = command.Parameters.Add("@Tasa_Interes", SqlDbType.Decimal);
-                param.Precision = 6;
-                param.Scale = 3;
+                param.Precision = 5;
+                param.Scale = 2;
                 param.Value = (object)tasaInteres.TasaDeInteres; 
 
                 try
@@ -599,7 +575,7 @@ public class PymesService
     public List<TasaInteres> ConsultarDatosTasasInteres()
     {
         List<TasaInteres> tasasInteres = new List<TasaInteres>();
-        string query = "SELECT ID_Instrumento, Ultima_Actualizacion, Tasa_Interes FROM [TASAS/INTERES]";
+        string query = "SELECT [ID-INSTRUMENTO], FechaUltimaActualizacion, TazaDeInteres FROM [TAZA-DE-INTERES]";
 
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
@@ -646,7 +622,7 @@ public class PymesService
         if (!existeBroker)
             throw new ArgumentException($"No existe un broker cargado con el ID {brokerComision.IdBroker}.");
 
-        string query = "INSERT INTO [BROKERS/COMISIONES] (ID_BROKER, Ultima_Actualizacion, Porcentaje_Comision) VALUES (@ID_BROKER, @Ultima_Actualizacion, @Porcentaje_Comision)";
+        string query = "INSERT INTO [BROKER/COMISIONES] ([ID-BROKER], FechaUltimaActualizacion, PorcentajeComision) VALUES (@ID_BROKER, @Ultima_Actualizacion, @Porcentaje_Comision)";
 
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
@@ -655,8 +631,8 @@ public class PymesService
                 command.Parameters.Add("@ID_BROKER", SqlDbType.Int).Value = (object)brokerComision.IdBroker;
                 command.Parameters.Add("@Ultima_Actualizacion", SqlDbType.DateTime).Value = DateTime.Now;
                 SqlParameter param = command.Parameters.Add("@Porcentaje_Comision", SqlDbType.Decimal);
-                param.Precision = 6;
-                param.Scale = 3;
+                param.Precision = 5;
+                param.Scale = 2;
                 param.Value = (object)brokerComision.PorcentajeComision;
 
                 try
@@ -676,7 +652,7 @@ public class PymesService
     public List<BrokerComision> ConsultarDatosBrokerComisiones()
     {
         List<BrokerComision> brokerComisiones = new List<BrokerComision>();
-        string query = "SELECT ID_BROKER, Ultima_Actualizacion, Porcentaje_Comision FROM [BROKERS/COMISIONES]";
+        string query = "SELECT [ID-BROKER], FechaUltimaActualizacion, PorcentajeComision FROM [BROKER/COMISIONES]";
 
         using (SqlConnection connection = new SqlConnection(connectionString))
         {

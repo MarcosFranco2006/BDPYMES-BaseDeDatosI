@@ -15,7 +15,6 @@ public class TasasController : ControllerBase
         _servicio = servicio;
     }
 
-    // POST api/Tasas  ->  llama al stored procedure SP_RegistrarTasaConValidacion
     [HttpPost]
     public IActionResult Registrar([FromBody] TasaRequest request)
     {

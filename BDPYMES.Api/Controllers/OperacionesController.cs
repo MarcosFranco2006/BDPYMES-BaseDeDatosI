@@ -15,7 +15,6 @@ public class OperacionesController : ControllerBase
         _servicio = servicio;
     }
 
-    // GET api/Operaciones  ->  lee la vista VW_Operaciones_Pymes
     [HttpGet]
     public IActionResult ObtenerTodas()
     {

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BDPYMES · Operaciones y tasas</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="cabecera">
+        <div class="cabecera-int">
+            <div class="marca">
+                <span class="marca-logo">BD</span>
+                <div>
+                    <h1>BDPYMES</h1>
+                    <p>Operaciones de PyMEs y tasas de interés</p>
+                </div>
+            </div>
+            <span id="conexion" class="chip">Conectando…</span>
+        </div>
+    </header>
+
+    <main>
+        <section class="resumen" aria-label="Resumen">
+            <div class="dato">
+                <span class="dato-numero" id="total-operaciones">–</span>
+                <span class="dato-texto">Operaciones</span>
+            </div>
+            <div class="dato">
+                <span class="dato-numero" id="total-pymes">–</span>
+                <span class="dato-texto">PyMEs con operaciones</span>
+            </div>
+        </section>
+
+        <section class="tarjeta">
+            <h2>Registrar tasa de interés</h2>
+            <p class="nota">Llama al stored procedure <code>SP_RegistrarTasaConValidacion</code>.</p>
+
+            <form id="formulario" novalidate>
+                <div class="campo">
+                    <label for="idInstrumento">ID del instrumento</label>
+                    <input id="idInstrumento" name="idInstrumento" type="number" min="1" step="1" placeholder="Ej: 1" required>
+                </div>
+                <div class="campo">
+                    <label for="tasaInteres">Tasa de interés (%)</label>
+                    <input id="tasaInteres" name="tasaInteres" type="number" min="0" max="999.99" step="0.01" placeholder="Ej: 45.50" required>
+                </div>
+                <div class="campo">
+                    <button type="submit" id="guardar">Registrar tasa</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="tarjeta">
+            <div class="listado-cab">
+                <div>
+                    <h2>Operaciones de las PyMEs</h2>
+                    <p class="nota">Datos de la vista <code>VW_Operaciones_Pymes</code>.</p>
+                </div>
+                <div class="listado-acciones">
+                    <input id="buscador" type="search" placeholder="Buscar…" aria-label="Buscar en el listado">
+                    <button id="recargar" type="button" class="secundario">Recargar</button>
+                </div>
+            </div>
+
+            <div class="tabla-wrap">
+                <table class="tabla">
+                    <thead>
+                        <tr>
+                            <th class="num">N° operación</th>
+                            <th class="num">CUIT</th>
+                            <th>Razón social</th>
+                            <th class="num">Monto</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-tabla"></tbody>
+                </table>
+            </div>
+            <p id="vacio" class="vacio" hidden>No hay operaciones para mostrar.</p>
+        </section>
+    </main>
+
+    <div id="aviso" class="aviso" role="status" aria-live="polite"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
