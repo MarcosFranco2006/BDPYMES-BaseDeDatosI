@@ -38,7 +38,7 @@ Una vez iniciado el Live Server se puede acceder a la pantalla mediante esta URL
 También se puede acceder sin Live Server, con la API levantada, desde: http://localhost:5089/
 
 # Qué muestra el frontend
-- Operaciones de las PyMEs: consulta a la vista 'VW_Operaciones_Pymes' (GET /api/Operaciones).
+- Operaciones de las PyMEs: consulta a la vista 'VW_Operaciones_Pymes' (GET /api/OperacionesVista).
 - Registrar tasa de interés: ejecuta el procedimiento almacenado 'SP_RegistrarTasaConValidacion' (POST /api/Tasas).
 - Garantías: listado y alta (GET y POST /api/Garantias).
 - Disponibilidad de garantías: listado y alta (GET y POST /api/GarantiasDisponibilidad).
