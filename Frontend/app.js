@@ -82,7 +82,7 @@ async function pedir(ruta, opciones) {
 async function cargar() {
     botonRecargar.disabled = true;
     try {
-        operaciones = await pedir("Operaciones");
+        operaciones = await pedir("OperacionesVista");
     } catch (error) {
         operaciones = [];
         mostrarAviso(error.message, "error");

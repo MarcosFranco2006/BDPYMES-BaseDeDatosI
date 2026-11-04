@@ -934,5 +934,107 @@ public List<GarantiaAlyc> ConsultarDatosGarantiasAlycs()
     }
     return garantiasAlycs;
     }
+
+    public Operacion InsertarDatoOperacion(Operacion operacion)
+    {
+    if (operacion == null)
+        throw new ArgumentNullException(nameof(operacion));
+
+    if (!ConsultarDatosPymes().Any(p => p.CUIT == operacion.CuitPyme))
+        throw new ArgumentException($"No existe una Pyme cargada con el CUIT {operacion.CuitPyme}.");
+
+    if (!ConsultarDatosAlycs().Any(a => a.Id == operacion.IdAlyc))
+        throw new ArgumentException($"No existe una ALYC con el ID {operacion.IdAlyc}.");
+
+    if (!ConsultarDatosBrokers().Any(b => b.Id == operacion.IdBroker))
+        throw new ArgumentException($"No existe un broker con el ID {operacion.IdBroker}.");
+
+    if (!ConsultarDatosInstrumentos().Any(i => i.Id == operacion.IdInstrumento))
+        throw new ArgumentException($"No existe un instrumento con el ID {operacion.IdInstrumento}.");
+
+    if (!ConsultarDatosSgrs().Any(s => s.Id == operacion.IdSgr))
+        throw new ArgumentException($"No existe una SGR con el ID {operacion.IdSgr}.");
+
+    if (string.IsNullOrWhiteSpace(operacion.Estado))
+        throw new ArgumentException("El estado no puede estar vacío.");
+
+    if (operacion.Estado.Length > 32)
+        throw new ArgumentException("El estado no puede superar los 32 caracteres.");
+
+    if (operacion.MontoOperacion <= 0)
+        throw new ArgumentException("El monto de la operación debe ser mayor a 0.");
+
+    List<Operacion> operaciones = ConsultarDatosOperaciones();
+    operacion.Id = operaciones.Count > 0 ? operaciones.Max(x => x.Id) + 1 : 1;
+
+    string query = "INSERT INTO OPERACIONES ([ID-OPERACION], [CUIT-PYME], [ID-ALYC], [ID-BROKER], [ID-INSTRUMENTO], [ID-SGR], Estado, MontoOperacion) " +
+                   "VALUES (@ID, @CuitPyme, @IdAlyc, @IdBroker, @IdInstrumento, @IdSgr, @Estado, @Monto)";
+
+    using (SqlConnection connection = new SqlConnection(connectionString))
+    {
+        using (SqlCommand command = new SqlCommand(query, connection))
+        {
+            command.Parameters.Add("@ID", SqlDbType.Int).Value = operacion.Id;
+            command.Parameters.Add("@CuitPyme", SqlDbType.Int).Value = operacion.CuitPyme;
+            command.Parameters.Add("@IdAlyc", SqlDbType.Int).Value = operacion.IdAlyc;
+            command.Parameters.Add("@IdBroker", SqlDbType.Int).Value = operacion.IdBroker;
+            command.Parameters.Add("@IdInstrumento", SqlDbType.Int).Value = operacion.IdInstrumento;
+            command.Parameters.Add("@IdSgr", SqlDbType.Int).Value = operacion.IdSgr;
+            command.Parameters.Add("@Estado", SqlDbType.VarChar, 32).Value = operacion.Estado;
+            command.Parameters.Add("@Monto", SqlDbType.Money).Value = operacion.MontoOperacion;
+
+            try
+            {
+                connection.Open();
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al insertar: {ex.Message}");
+            }
+        }
+    }
+    return operacion;
+    }
+
+    public List<Operacion> ConsultarDatosOperaciones()
+    {
+    List<Operacion> operaciones = new List<Operacion>();
+    string query = "SELECT [ID-OPERACION], [CUIT-PYME], [ID-ALYC], [ID-BROKER], [ID-INSTRUMENTO], [ID-SGR], Estado, MontoOperacion FROM OPERACIONES";
+
+    using (SqlConnection connection = new SqlConnection(connectionString))
+    {
+        using (SqlCommand command = new SqlCommand(query, connection))
+        {
+            try
+            {
+                connection.Open();
+
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        operaciones.Add(new Operacion
+                        {
+                            Id = reader.GetInt32(0),
+                            CuitPyme = reader.GetInt32(1),
+                            IdAlyc = reader.GetInt32(2),
+                            IdBroker = reader.GetInt32(3),
+                            IdInstrumento = reader.GetInt32(4),
+                            IdSgr = reader.GetInt32(5),
+                            Estado = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
+                            MontoOperacion = reader.IsDBNull(7) ? 0.0m : reader.GetDecimal(7)
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al consultar: {ex.Message}");
+            }
+        }
+    }
+    return operaciones;
+    }
 }
 
