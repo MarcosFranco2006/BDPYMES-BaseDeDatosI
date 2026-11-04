@@ -239,7 +239,7 @@ Registro histórico de acciones sobre las operaciones. No tiene claves foráneas
 
 ## Frontend
 En el Frontend se muestran:
-- Operaciones de las PyMEs: consulta a la vista 'VW_Operaciones_Pymes' (GET /api/Operaciones).
+- Operaciones de las PyMEs: consulta a la vista 'VW_Operaciones_Pymes' (GET /api/OperacionesVista).
 - Registrar tasa de interés: ejecuta el procedimiento almacenado 'SP_RegistrarTasaConValidacion' (POST /api/Tasas).
 - Garantías: listado y alta (GET y POST /api/Garantias).
 - Disponibilidad de garantías: listado y alta (GET y POST /api/GarantiasDisponibilidad).
